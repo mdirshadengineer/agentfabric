@@ -1,1 +1,1 @@
-# @mdirshadengineer/agentfabric
+# agentfabric
