@@ -1,0 +1,53 @@
+{
+	"name": "agentfabric",
+	"type": "module",
+	"version": "0.0.1-alpha.1",
+	"description": "AgentFabric CLI - A minimal process management layer for running, monitoring, and controlling the AgentFabric runtime.",
+	"license": "Apache-2.0",
+	"bin": {
+		"afabric": "bin/agentfabric",
+		"agentfabric": "bin/agentfabric"
+	},
+	"publishConfig": {
+		"access": "public"
+	},
+	"author": {
+		"name": "mdirshadengineer",
+		"email": "mdirshadengineer+github@gmail.com",
+		"url": "https://mdirshad.vercel.app"
+	},
+	"repository": {
+		"directory": "packages/cli",
+		"type": "git"
+	},
+	"engines": {
+		"node": ">=24"
+	},
+	"files": ["dist", "bin", "README.md", "CHANGELOG.md", "package.json"],
+	"scripts": {
+		"start": "node ./bin/agentfabric",
+		"dev": "tsx watch src/dev/main.ts",
+		"compile-cli": "shx rm -rf dist && tsc -b tsconfig.build.json",
+		"build": "pnpm run compile-cli",
+		"lint": "biome check",
+		"format": "biome format --write",
+		"typecheck": "tsc --noEmit",
+		"clean": "shx rm -rf node_modules .turbo dist"
+	},
+	"dependencies": {
+		"@fastify/autoload": "6.3.1",
+		"@fastify/http-proxy": "11.4.4",
+		"@fastify/static": "9.1.3",
+		"arktype": "2.2.0",
+		"fastify": "5.8.5",
+		"reflect-metadata": "0.2.2",
+		"semver": "7.7.4",
+		"source-map-support": "0.5.21",
+		"tsyringe": "4.10.0"
+	},
+	"devDependencies": {
+		"@types/node": "25.6.0",
+		"tsx": "4.21.0",
+		"typescript": "6.0.3"
+	}
+}
