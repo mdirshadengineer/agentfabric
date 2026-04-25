@@ -1,0 +1,20 @@
+{
+  "recommendations": [
+    "biomejs.biome",
+    "miguelsolorio.fluent-icons",
+    "mhutchie.git-graph",
+    "github.vscode-github-actions",
+    "aykutsarac.jsoncrack-vscode",
+    "bierner.markdown-preview-github-styles",
+    "bierner.markdown-mermaid",
+    "pkief.material-icon-theme",
+    "unifiedjs.vscode-mdx",
+    "christian-kohler.path-intellisense",
+    "ms-playwright.playwright",
+    "ms-ossdata.vscode-pgsql",
+    "postman.postman-for-vscode",
+    "bradlc.vscode-tailwindcss",
+    "vitest.explorer"
+
+  ]
+}

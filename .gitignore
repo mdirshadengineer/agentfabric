@@ -1,0 +1,48 @@
+# Node.js dependencies
+node_modules
+
+# Optional: Ignore environment variable files
+.env*
+!.env.example
+
+# Optional: Ignore log files
+logs
+*.log
+
+# Optional: Ignore build artifacts
+build
+dist
+output
+out
+coverage
+storybook-static
+playwright-report
+
+# Optional: Ignore IDE/editor specific files
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+
+# Optional: Ignore OS generated files
+.DS_Store
+Thumbs.db
+
+# Turborepo specific
+.turbo
+
+# Project specific
+compiled
+
+# Optional: Ignore local configuration files
+*.local
+
+# Optional: Ignore lock files (if you want to use a different package manager)
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Tanstack
+.tanstack
