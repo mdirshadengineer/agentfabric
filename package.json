@@ -3,8 +3,16 @@
   "private": true,
   "description": "AgentFabric - A framework for building, deploying, and managing AI agents.",
   "scripts": {
-    "start": "echo \"Error: no start script specified\" && exit 1",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "turbo run dev",
+		"test": "turbo run test",
+		"lint": "turbo run lint",
+		"build": "turbo run build",
+		"clean": "turbo run clean",
+		"format": "turbo run format",
+		"changeset": "changeset",
+		"version-packages": "changeset version",
+		"publish-packages": "pnpm run build && changeset publish",
+		"preinstall": "pnpm exec only-allow pnpm"
   },
   "repository": {
     "type": "git",
@@ -28,5 +36,16 @@
   "packageManager": "pnpm@10.33.0",
   "engines": {
     "node": ">=24"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.4.13",
+    "@changesets/changelog-github": "0.6.0",
+    "@changesets/cli": "2.31.0",
+    "@types/node": "25.6.0",
+    "only-allow": "1.2.2",
+    "shx": "0.4.0",
+    "tsx": "4.21.0",
+    "turbo": "2.9.6",
+    "typescript": "6.0.3"
   }
 }

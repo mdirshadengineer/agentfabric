@@ -1,0 +1,36 @@
+{
+	"$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
+	"vcs": {
+		"enabled": true,
+		"clientKind": "git",
+		"useIgnoreFile": true
+	},
+	"root": true,
+	"files": {
+		"ignoreUnknown": true,
+		"includes": [
+			"**/*.{js,jsx,ts,tsx,json}",
+			"!node_modules",
+			"!pnpm-lock.yaml",
+			"!**/dist",
+      "!**/build",
+      "!**/out",
+      "!**/playwright-report",
+      "!**/storybook-static",
+      "!**/coverage",
+      "!**/.turbo",
+      "!**/.git",
+      "!**/.svn",
+      "!**/.hg",
+      "!**/.DS_Store"
+		]
+	},
+	"assist": {
+		"enabled": true,
+		"actions": {
+			"source": {
+				"organizeImports": "on"
+			}
+		}
+	}
+}
