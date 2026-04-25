@@ -3,6 +3,13 @@
   "private": true,
   "description": "AgentFabric - A framework for building, deploying, and managing AI agents.",
   "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "test": "turbo run test",
+    "lint": "turbo run lint",
+    "format": "turbo run format",
+    "typecheck": "turbo run typecheck",
+    "clean": "turbo run clean",
     "changeset": "changeset",
     "version": "changeset version",
     "publish": "changeset publish"
@@ -38,6 +45,7 @@
     "only-allow": "1.2.2",
     "shx": "0.4.0",
     "tsx": "4.21.0",
+    "turbo": "2.9.6",
     "typescript": "6.0.3"
   }
 }
