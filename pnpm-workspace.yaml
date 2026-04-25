@@ -1,0 +1,3 @@
+packages:
+  - 'web' # Platform UI app (Not to be released as a package)
+  - 'packages/*'

@@ -1,0 +1,32 @@
+{
+  "name": "agentfabric-monorepo",
+  "private": true,
+  "description": "AgentFabric - A framework for building, deploying, and managing AI agents.",
+  "scripts": {
+    "start": "echo \"Error: no start script specified\" && exit 1",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mdirshadengineer/agentfabric.git"
+  },
+  "bugs": {
+    "url": "https://github.com/mdirshadengineer/agentfabric/issues"
+  },
+  "keywords": [
+    "AI",
+    "agents",
+    "framework",
+    "deployment"
+  ],
+  "author": {
+    "name": "Md Irshad",
+    "email": "mdirshadengineer+github@gmail.com",
+    "url": "https://mdirshad.vercel.app"
+  },
+  "license": "Apache-2.0",
+  "packageManager": "pnpm@10.33.0",
+  "engines": {
+    "node": ">=24"
+  }
+}
