@@ -42,7 +42,6 @@ compiled
 # Optional: Ignore lock files (if you want to use a different package manager)
 package-lock.json
 yarn.lock
-pnpm-lock.yaml
 
 # Tanstack
 .tanstack
