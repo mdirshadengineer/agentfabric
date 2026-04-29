@@ -9,6 +9,7 @@
 		"build": "turbo run build",
 		"clean": "turbo run clean",
 		"format": "turbo run format",
+    "typecheck": "turbo run typecheck",
 		"changeset": "changeset",
 		"version-packages": "changeset version",
 		"publish-packages": "pnpm run build && changeset publish",
