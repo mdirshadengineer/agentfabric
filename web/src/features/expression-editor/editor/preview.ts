@@ -42,9 +42,16 @@ export function registerPreview(
 		decorationCollection.set(newDecorations)
 	}
 
-	editor.onDidChangeModelContent(() => {
+	const contentDisposable = editor.onDidChangeModelContent(() => {
 		setTimeout(update, 150)
 	})
 
 	update()
+
+	return {
+		dispose() {
+			contentDisposable.dispose()
+			decorationCollection.clear()
+		},
+	}
 }
