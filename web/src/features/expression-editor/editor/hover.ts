@@ -1,45 +1,62 @@
 import type { IMarkdownString } from "monaco-editor"
 import type { JSONSchema } from "../expression/types"
 
-export function buildHoverContent(
-	path: string,
-	schema: JSONSchema | null,
-	value: any
-) {
-	const lines: IMarkdownString[] = []
+function schemaToTypeDefinition(schema: JSONSchema, indent = 0): string {
+	const padding = "\t".repeat(indent)
+	const childPadding = "\t".repeat(indent + 1)
 
-	// Title
-	lines.push({
-		value: `**${path.split(".").pop()}**`,
-	})
-
-	// Type
-	if (schema) {
-		lines.push({
-			value: `Type: \`${schema.type}\``,
-		})
-	}
-
-	// Object keys
-	if (schema?.type === "object") {
-		const keys = Object.keys(schema.properties)
-			.map((k) => `- ${k}`)
+	if (schema.type === "object") {
+		const properties = Object.entries(schema.properties)
+			.map(
+				([key, value]) =>
+					`${childPadding}${JSON.stringify(key)}: ${schemaToTypeDefinition(
+						value,
+						indent + 1
+					)};`
+			)
 			.join("\n")
 
-		lines.push({
-			value: `**Keys:**\n${keys}`,
-		})
+		return `{\n${properties}\n${padding}}`
 	}
 
-	// Preview
-	if (value !== undefined) {
-		const preview =
-			typeof value === "object"
-				? JSON.stringify(value, null, 2).slice(0, 200)
-				: String(value)
+	if (schema.type === "array") {
+		const itemType = schemaToTypeDefinition(schema.items, indent)
+		return schema.items.type === "object"
+			? `Array<${itemType}>`
+			: `${itemType}[]`
+	}
+
+	if (schema.type === "any") return "unknown"
+
+	return schema.type
+}
+
+function getTypeLabel(schema: JSONSchema | null) {
+	if (!schema) return "unknown"
+	if (schema.type === "array") {
+		return `${schema.items.type}[]`
+	}
+
+	return schema.type
+}
+
+export function buildHoverContent(path: string, schema: JSONSchema | null) {
+	const lines: IMarkdownString[] = []
+	const name = path.split(".").pop() ?? path
+
+	lines.push({
+		value: `**${name}**`,
+	})
+
+	if (schema) {
+		lines.push({
+			value: `Type: \`${getTypeLabel(schema)}\``,
+		})
 
 		lines.push({
-			value: `**Preview:**\n\`\`\`json\n${preview}\n\`\`\``,
+			value: `**Definition:**\n\`\`\`ts\n${name}: ${schemaToTypeDefinition(
+				schema
+			)}\n\`\`\``,
 		})
 	}
 

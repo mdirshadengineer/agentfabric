@@ -37,7 +37,7 @@ const defaultValueByMode: Record<EditorMode, string> = {
 export default function ExpressionEditor({
 	registry,
 	context,
-	mode = "expression",
+	mode = "javascript",
 	defaultValue,
 }: Props) {
 	const providerDisposableRef = useRef<IDisposable | null>(null)

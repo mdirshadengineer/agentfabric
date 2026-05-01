@@ -277,19 +277,15 @@ export function registerProviders(
 				const sliced = segments.slice(0, targetIndex + 1)
 
 				let schema: JSONSchema | null = null
-				let value: any = context
-
 				for (let i = 0; i < sliced.length; i++) {
 					const key = sliced[i]
 
 					if (i === 0 && key === "steps") {
-						value = context.steps
 						continue
 					}
 
 					if (i === 1) {
 						schema = registry[key] ?? null
-						value = value?.[key]
 						continue
 					}
 
@@ -297,17 +293,15 @@ export function registerProviders(
 
 					if (schema.type === "object") {
 						schema = schema.properties?.[key] ?? null
-						value = value?.[key]
 					}
 
 					if (schema?.type === "array") {
 						schema = schema.items
-						value = value?.[0]
 					}
 				}
 
 				return {
-					contents: buildHoverContent(sliced.join("."), schema, value),
+					contents: buildHoverContent(sliced.join("."), schema),
 				}
 			},
 		})
