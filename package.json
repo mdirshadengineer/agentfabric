@@ -4,16 +4,16 @@
   "description": "AgentFabric - A framework for building, deploying, and managing AI agents.",
   "scripts": {
     "dev": "turbo run dev",
-		"test": "turbo run test",
-		"lint": "turbo run lint",
-		"build": "turbo run build",
-		"clean": "turbo run clean",
-		"format": "turbo run format",
+    "test": "turbo run test",
+    "lint": "turbo run lint",
+    "build": "turbo run build",
+    "clean": "turbo run clean",
+    "format": "turbo run format",
     "typecheck": "turbo run typecheck",
-		"changeset": "changeset",
-		"version-packages": "changeset version",
-		"publish-packages": "pnpm run build && changeset publish",
-		"preinstall": "pnpm exec only-allow pnpm"
+    "changeset": "changeset",
+    "version-packages": "changeset version",
+    "publish-packages": "pnpm run build && changeset publish",
+    "preinstall": "pnpm exec only-allow pnpm"
   },
   "repository": {
     "type": "git",
@@ -34,7 +34,7 @@
     "url": "https://mdirshad.vercel.app"
   },
   "license": "Apache-2.0",
-  "packageManager": "pnpm@10.33.0",
+  "packageManager": "pnpm@10.33.2+sha512.a90faf6feeab71ad6c6e57f94e0fe1a12f5dcc22cd754db40ae9593eb6a3e0b6b12e3540218bb37ae083404b1f2ce6db2a4121e979829b4aff94b99f49da1cf8",
   "engines": {
     "node": ">=24"
   },
