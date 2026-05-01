@@ -1,6 +1,6 @@
 import type * as Monaco from "monaco-editor"
 import { getSuggestions } from "../expression/autocomplete"
-import type { ExecutionContext, JSONSchema } from "../expression/types"
+import type { JSONSchema } from "../expression/types"
 import { buildHoverContent } from "./hover"
 import {
 	EXPRESSION_EDITOR_LANGUAGE,
@@ -171,7 +171,6 @@ function getExpressionContext(
 export function registerProviders(
 	monaco: typeof import("monaco-editor"),
 	registry: Record<string, JSONSchema>,
-	context: ExecutionContext,
 	language = EXPRESSION_EDITOR_LANGUAGE
 ) {
 	const disposables: Monaco.IDisposable[] = [

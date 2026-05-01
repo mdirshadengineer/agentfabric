@@ -18,6 +18,7 @@ type Props = {
 	context: ExecutionContext
 	mode?: EditorMode
 	defaultValue?: string
+	height?: string
 }
 
 const handleBeforeMount: BeforeMount = (monacoInstance) => {
@@ -39,6 +40,7 @@ export default function ExpressionEditor({
 	context,
 	mode = "javascript",
 	defaultValue,
+	height = "200px",
 }: Props) {
 	const providerDisposableRef = useRef<IDisposable | null>(null)
 
@@ -53,7 +55,6 @@ export default function ExpressionEditor({
 		providerDisposableRef.current = registerProviders(
 			monacoInstance,
 			registry,
-			context,
 			language
 		)
 
@@ -72,7 +73,7 @@ export default function ExpressionEditor({
 	return (
 		<Editor
 			key={mode}
-			height="200px"
+			height={height}
 			defaultLanguage={language}
 			defaultValue={editorDefaultValue}
 			beforeMount={handleBeforeMount}
