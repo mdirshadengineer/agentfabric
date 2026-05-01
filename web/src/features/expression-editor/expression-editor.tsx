@@ -1,5 +1,5 @@
 import Editor, { type BeforeMount, type OnMount } from "@monaco-editor/react"
-import type { IDisposable } from "monaco-editor"
+import type { editor, IDisposable, Position } from "monaco-editor"
 import { useMemo, useRef } from "react"
 import {
 	EXPRESSION_EDITOR_LANGUAGE,
@@ -12,6 +12,7 @@ import { registerProviders } from "./editor/providers"
 import type { ExecutionContext, JSONSchema } from "./expression/types"
 
 type EditorMode = "expression" | "javascript"
+const JSON_TREE_PATH_MIME = "application/x-agent-expression-path"
 
 type Props = {
 	registry: Record<string, JSONSchema>
@@ -94,6 +95,29 @@ function buildDefaultValue(mode: EditorMode, context: ExecutionContext) {
 	return `const ${variableName} = ${expression}`
 }
 
+function isInsideExpression(model: editor.ITextModel, position: Position) {
+	const text = model.getValue()
+	const offset = model.getOffsetAt(position)
+	const start = text.lastIndexOf("{{", offset)
+
+	if (start === -1) return false
+
+	const end = text.indexOf("}}", start)
+
+	return end === -1 ? offset >= start + 2 : offset >= start + 2 && offset <= end
+}
+
+function formatDroppedPath(
+	path: string,
+	mode: EditorMode,
+	model: editor.ITextModel,
+	position: Position
+) {
+	if (mode === "javascript" || isInsideExpression(model, position)) return path
+
+	return `{{ ${path} }}`
+}
+
 export default function ExpressionEditor({
 	registry,
 	context,
@@ -117,6 +141,47 @@ export default function ExpressionEditor({
 			language
 		)
 
+		const editorDomNode = editor.getDomNode()
+		const handleDragOver = (event: DragEvent) => {
+			if (!event.dataTransfer?.types.includes(JSON_TREE_PATH_MIME)) return
+
+			event.preventDefault()
+			event.dataTransfer.dropEffect = "copy"
+		}
+
+		const handleDrop = (event: DragEvent) => {
+			const model = editor.getModel()
+			if (!model) return
+
+			const path =
+				event.dataTransfer?.getData(JSON_TREE_PATH_MIME) ||
+				event.dataTransfer?.getData("text/plain")
+
+			if (!path) return
+
+			event.preventDefault()
+			event.stopPropagation()
+
+			const target = editor.getTargetAtClientPoint(event.clientX, event.clientY)
+			const position = target?.position ?? editor.getPosition()
+			if (!position) return
+
+			const text = formatDroppedPath(path, mode, model, position)
+			const range = new monacoInstance.Range(
+				position.lineNumber,
+				position.column,
+				position.lineNumber,
+				position.column
+			)
+
+			editor.focus()
+			editor.setPosition(position)
+			editor.executeEdits("json-tree-drop", [{ range, text }])
+		}
+
+		editorDomNode?.addEventListener("dragover", handleDragOver)
+		editorDomNode?.addEventListener("drop", handleDrop)
+
 		let previewDisposable: IDisposable | null = null
 		if (mode === "expression") {
 			previewDisposable = registerPreview(editor, context)
@@ -125,6 +190,8 @@ export default function ExpressionEditor({
 		editor.onDidDispose(() => {
 			providerDisposableRef.current?.dispose()
 			previewDisposable?.dispose()
+			editorDomNode?.removeEventListener("dragover", handleDragOver)
+			editorDomNode?.removeEventListener("drop", handleDrop)
 			providerDisposableRef.current = null
 		})
 	}

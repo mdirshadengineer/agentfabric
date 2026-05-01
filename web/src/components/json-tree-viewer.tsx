@@ -15,11 +15,16 @@ import {
 } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
 
+export const JSON_TREE_PATH_MIME = "application/x-agent-expression-path"
+
+type JsonPathSegment = string | number
+
 type JsonViewerProps = {
 	data: any
 	rootName?: string
 	defaultExpanded?: boolean
 	className?: string
+	enableDragPaths?: boolean
 }
 
 export function JsonViewer({
@@ -27,6 +32,7 @@ export function JsonViewer({
 	rootName = "root",
 	defaultExpanded = true,
 	className,
+	enableDragPaths = false,
 }: JsonViewerProps) {
 	return (
 		<TooltipProvider>
@@ -36,6 +42,8 @@ export function JsonViewer({
 					data={data}
 					isRoot={true}
 					defaultExpanded={defaultExpanded}
+					enableDragPaths={enableDragPaths}
+					pathSegments={[]}
 				/>
 			</div>
 		</TooltipProvider>
@@ -48,6 +56,8 @@ type JsonNodeProps = {
 	isRoot?: boolean
 	defaultExpanded?: boolean
 	level?: number
+	enableDragPaths?: boolean
+	pathSegments?: JsonPathSegment[]
 }
 
 function JsonNode({
@@ -56,6 +66,8 @@ function JsonNode({
 	isRoot = false,
 	defaultExpanded = true,
 	level = 0,
+	enableDragPaths = false,
+	pathSegments = [],
 }: JsonNodeProps) {
 	const [isExpanded, setIsExpanded] = React.useState(defaultExpanded)
 	const [isCopied, setIsCopied] = React.useState(false)
@@ -69,6 +81,18 @@ function JsonNode({
 		navigator.clipboard.writeText(JSON.stringify(data, null, 2))
 		setIsCopied(true)
 		setTimeout(() => setIsCopied(false), 2000)
+	}
+
+	const expressionPath = buildExpressionPath(pathSegments)
+	const canDragPath = enableDragPaths && !isRoot && expressionPath.length > 0
+
+	const handleDragStart = (event: React.DragEvent) => {
+		if (!canDragPath) return
+
+		event.stopPropagation()
+		event.dataTransfer.effectAllowed = "copy"
+		event.dataTransfer.setData(JSON_TREE_PATH_MIME, expressionPath)
+		event.dataTransfer.setData("text/plain", expressionPath)
 	}
 
 	const dataType =
@@ -88,9 +112,13 @@ function JsonNode({
 			className={cn("pl-4 group/object", level > 0 && "border-l border-border")}
 		>
 			<div
+				draggable={canDragPath}
+				onDragStart={handleDragStart}
+				title={canDragPath ? expressionPath : undefined}
 				className={cn(
 					"flex items-center gap-1 py-1 hover:bg-muted/50 rounded px-1 -ml-4 cursor-pointer group/property",
-					isRoot && "text-primary font-semibold"
+					isRoot && "text-primary font-semibold",
+					canDragPath && "cursor-grab active:cursor-grabbing"
 				)}
 				onClick={isExpandable ? handleToggle : undefined}
 			>
@@ -151,6 +179,11 @@ function JsonNode({
 							data={data[key]}
 							level={level + 1}
 							defaultExpanded={level < 1}
+							enableDragPaths={enableDragPaths}
+							pathSegments={[
+								...pathSegments,
+								dataType === "array" ? Number(key) : key,
+							]}
 						/>
 					))}
 					<div className="text-muted-foreground pl-4 py-1">
@@ -160,6 +193,22 @@ function JsonNode({
 			)}
 		</div>
 	)
+}
+
+function isIdentifier(value: string) {
+	return /^[A-Za-z_$][\w$]*$/.test(value)
+}
+
+function buildExpressionPath(segments: JsonPathSegment[]) {
+	return segments
+		.map((segment, index) => {
+			if (typeof segment === "number") return `[${segment}]`
+			if (index === 0) return segment
+			if (isIdentifier(segment)) return `.${segment}`
+
+			return `[${JSON.stringify(segment)}]`
+		})
+		.join("")
 }
 
 // Update the JsonValue function to make the entire row clickable with an expand icon

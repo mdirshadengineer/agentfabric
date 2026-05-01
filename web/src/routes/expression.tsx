@@ -88,6 +88,7 @@ function App() {
 							<JsonViewer
 								data={mockContext}
 								rootName="context"
+								enableDragPaths={true}
 								className="h-[calc(100%-2.35rem)] overflow-auto p-3"
 							/>
 						</section>

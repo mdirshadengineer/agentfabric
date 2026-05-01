@@ -32,8 +32,14 @@ function parsePath(input: string): ASTNode[] {
 			}
 
 			const end = input.indexOf("]", i)
-			const index = Number(input.slice(i + 1, end))
-			tokens.push({ type: "index", index })
+			const rawAccessor = input.slice(i + 1, end).trim()
+			const numericIndex = Number(rawAccessor)
+
+			if (Number.isInteger(numericIndex)) {
+				tokens.push({ type: "index", index: numericIndex })
+			} else {
+				tokens.push(token(unquoteAccessor(rawAccessor)))
+			}
 
 			i = end
 			continue
@@ -45,6 +51,17 @@ function parsePath(input: string): ASTNode[] {
 	if (buffer) tokens.push(token(buffer))
 
 	return tokens
+}
+
+function unquoteAccessor(value: string) {
+	if (
+		(value.startsWith('"') && value.endsWith('"')) ||
+		(value.startsWith("'") && value.endsWith("'"))
+	) {
+		return value.slice(1, -1)
+	}
+
+	return value
 }
 
 function token(str: string): ASTNode {
