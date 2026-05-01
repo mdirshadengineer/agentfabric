@@ -42,7 +42,7 @@ function App() {
 					</Button>
 				</DialogTrigger>
 
-				<DialogContent className="h-[min(760px,calc(100vh-4rem))] max-w-[calc(100vw-2rem)] grid-rows-[auto_1fr] gap-3 p-4 sm:max-w-[1180px]">
+				<DialogContent className="h-[min(760px,calc(100vh-4rem))] max-w-[calc(100vw-2rem)] grid-rows-[auto_1fr] gap-3 p-4 sm:max-w-295">
 					<DialogHeader className="pr-8">
 						<div className="flex items-start justify-between gap-4">
 							<div className="space-y-1">
