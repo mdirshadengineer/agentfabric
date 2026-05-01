@@ -1,0 +1,31 @@
+{
+	"$schema": "https://ui.shadcn.com/schema.json",
+	"style": "radix-nova",
+	"rsc": false,
+	"tsx": true,
+	"tailwind": {
+		"config": "",
+		"css": "src/globals.css",
+		"baseColor": "neutral",
+		"cssVariables": true,
+		"prefix": ""
+	},
+	"iconLibrary": "tabler",
+	"rtl": false,
+	"menuColor": "default",
+	"menuAccent": "subtle",
+	"aliases": {
+		"components": "@/components",
+		"utils": "@/lib/utils",
+		"ui": "@/components/ui",
+		"lib": "@/lib",
+		"hooks": "@/hooks"
+	},
+	"registries": {
+		"@agents-ui": "https://livekit.com/ui/r/{name}.json",
+		"@billingsdk": "https://billingsdk.com/r/{name}.json",
+		"@tool-ui": "https://www.tool-ui.com/r/{name}.json",
+		"@commercn": "https://commercn.com/r/{name}.json",
+		"@loading-ui": "https://loading-ui.com/r/{name}.json"
+	}
+}
