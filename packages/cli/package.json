@@ -33,8 +33,10 @@
 	"scripts": {
 		"start": "node ./bin/agentfabric",
 		"dev": "tsx watch src/dev/main.ts",
+		"build-ui": "pnpm --filter agentfabric-web ui-build",
 		"compile-cli": "shx rm -rf dist && tsc -b tsconfig.build.json",
-		"build": "pnpm run compile-cli",
+		"sync-ui": "shx rm -rf dist/ui && shx mkdir -p dist/ui && shx cp -r ../../web/build/. dist/ui",
+		"build": "pnpm run build-ui && pnpm run compile-cli && pnpm run sync-ui",
 		"lint": "biome check",
 		"format": "biome format --write",
 		"typecheck": "tsc --noEmit",
