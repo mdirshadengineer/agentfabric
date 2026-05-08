@@ -12,22 +12,12 @@ export default defineConfig({
 		react(),
 		tailwindcss(),
 	],
-	optimizeDeps: {
-		exclude: ["monaco-editor"],
-	},
 	resolve: {
 		alias: {
 			"@": path.resolve(__dirname, "./src"),
 		},
 	},
 	build: {
-		outDir: "build",
-		rollupOptions: {
-			output: {
-				manualChunks: {
-					monaco: ["monaco-editor"],
-				},
-			},
-		},
+		outDir: "build"
 	},
 })
