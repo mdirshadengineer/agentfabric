@@ -1,7 +1,7 @@
 {
 	"name": "agentfabric",
 	"type": "module",
-	"version": "0.0.1",
+	"version": "0.0.2",
 	"description": "AgentFabric CLI - A minimal process management layer for running, monitoring, and controlling the AgentFabric runtime.",
 	"license": "Apache-2.0",
 	"bin": {
