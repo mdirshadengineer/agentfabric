@@ -1,3 +1,10 @@
+minimumReleaseAge: 7200 # 5 days in minutes
+
 packages:
   - 'web' # Platform UI app (Not to be released as a package)
   - 'packages/*'
+
+overrides:
+  'fast-uri': 3.1.2
+  'ip-address': 10.1.1
+  'hono': 4.12.18
