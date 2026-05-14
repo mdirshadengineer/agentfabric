@@ -7,5 +7,11 @@
 		"removeComments": true,
 		"tsBuildInfoFile": "node_modules/.cache/tsconfig.build.tsbuildinfo"
 	},
-	"exclude": ["dist", "node_modules", "src/dev"]
+	"exclude": [
+		"dist",
+		"migrations",
+		"node_modules",
+		"src/dev",
+		"src/drizzle.config.ts"
+	]
 }

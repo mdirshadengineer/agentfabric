@@ -15,7 +15,7 @@ const __dirname = dirname(__filename);
 const isDev = process.env.NODE_ENV !== "production";
 
 function createAPIServer() {
-	const app = fastify({ logger: true });
+	const app = fastify({ logger: false });
 
 	/**
 	 * 1. API Routes

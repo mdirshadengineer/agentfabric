@@ -9,6 +9,23 @@ It supports:
 * Graceful and forced shutdown
 * Active process registry (no stale state)
 
+## API Auth Setup
+
+The CLI API server now integrates Better Auth through the workspace auth package.
+
+Required environment variables:
+
+* DATABASE_URL: PostgreSQL connection string used by the auth adapter.
+* AGENTFABRIC_AUTH_SECRET: Secret used by Better Auth to sign and validate auth data.
+
+Auth routes are exposed at:
+
+* /api/v1/auth/*
+
+Protected route example:
+
+* /api/v1/example (requires a valid authenticated session)
+
 ---
 
 # 🧠 Design Principles
