@@ -1,6 +1,6 @@
 {
-	"id": "6e8a8c23-eef3-4455-912b-877293ea2508",
-	"prevId": "00000000-0000-0000-0000-000000000000",
+	"id": "6b8ff7be-2edd-4ba2-ac49-3d2aa4886dd0",
+	"prevId": "6e8a8c23-eef3-4455-912b-877293ea2508",
 	"version": "7",
 	"dialect": "postgresql",
 	"tables": {
@@ -316,6 +316,12 @@
 				},
 				"user_agent": {
 					"name": "user_agent",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"device_id": {
+					"name": "device_id",
 					"type": "text",
 					"primaryKey": false,
 					"notNull": false

@@ -16,7 +16,38 @@ The CLI API server now integrates Better Auth through the workspace auth package
 Required environment variables:
 
 * DATABASE_URL: PostgreSQL connection string used by the auth adapter.
-* AGENTFABRIC_AUTH_SECRET: Secret used by Better Auth to sign and validate auth data.
+* BETTER_AUTH_SECRET: Secret used by Better Auth to sign and validate auth data.
+* BETTER_AUTH_BASE_URL: Public base URL used by Better Auth for callback and cookie domain handling.
+
+Optional session policy variables:
+
+* AGENTFABRIC_AUTH_SESSION_POLICY_MODE: Session policy mode. Supported values: keep-latest, block-new-login, max-sessions. Default: max-sessions.
+* AGENTFABRIC_AUTH_MAX_SESSIONS: Maximum number of active sessions per user for block-new-login and max-sessions modes. Must be an integer >= 1. Default: 5.
+* AGENTFABRIC_AUTH_MAX_SESSIONS_PER_DEVICE: Maximum active sessions allowed per user and device identifier. Must be an integer >= 1. Default: 2.
+* AGENTFABRIC_AUTH_MAX_SESSIONS_PER_IP: Maximum active sessions allowed per user and IP address. Must be an integer >= 1. Default: 5.
+
+## Session Governance
+
+AgentFabric enforces multi-layered session governance to prevent excessive concurrent sessions:
+
+### Policy Modes
+
+- **keep-latest**: Only 1 session per user. New sign-in invalidates all previous sessions.
+- **block-new-login**: Reject sign-in attempts when max sessions reached; user must log out from existing session first.
+- **max-sessions**: Allow up to max sessions per user; when limit is reached, prune oldest sessions on new sign-in.
+
+### Device & IP-Based Limits
+
+Sessions are additionally governed by device ID and IP address:
+- **Per-Device Limit** (AGENTFABRIC_AUTH_MAX_SESSIONS_PER_DEVICE): Max concurrent sessions from the same device.
+- **Per-IP Limit** (AGENTFABRIC_AUTH_MAX_SESSIONS_PER_IP): Max concurrent sessions from the same IP address.
+
+To enable device tracking, clients should send a stable device identifier on sign-in requests:
+
+* Header: `x-device-id`
+* Body field: `deviceId`
+
+The device ID is stored in the `session.device_id` column for tracking and governance.
 
 Auth routes are exposed at:
 
@@ -372,6 +403,8 @@ id: "default"
 
 * File-based logs
 * SQLite-backed logs & history
+* Fastify uses Pino for server logs, with `pino-pretty` in development and structured JSON in production
+* HTTP request and error logs are persisted to Postgres in `server_log`, which can be queried from Grafana
 
 ## Reliability
 
