@@ -3,10 +3,10 @@ import { TooltipProvider } from "@/components/ui/tooltip"
 
 function ShadcnProviders({ children }: { children: React.ReactNode }) {
 	return (
-			<TooltipProvider>
-				<Toaster richColors />
-				{children}
-			</TooltipProvider>
+		<TooltipProvider>
+			<Toaster richColors />
+			{children}
+		</TooltipProvider>
 	)
 }
 
