@@ -34,7 +34,7 @@ const config = {
 			{
 				configId: "public",
 				defaultPrefix: "pk_",
-				enableSessionForAPIKeys: true,
+				enableSessionForAPIKeys: false,
 				rateLimit: {
 					enabled: true,
 					maxRequests: 100,
@@ -44,7 +44,7 @@ const config = {
 			{
 				configId: "secret",
 				defaultPrefix: "sk_",
-				enableSessionForAPIKeys: true,
+				enableSessionForAPIKeys: false,
 				enableMetadata: true,
 				rateLimit: {
 					enabled: true,
