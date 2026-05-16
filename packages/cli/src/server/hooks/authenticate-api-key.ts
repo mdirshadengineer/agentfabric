@@ -1,4 +1,4 @@
-import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
+import type { FastifyReply, FastifyRequest } from "fastify";
 import fp from "fastify-plugin";
 
 function getBearerToken(
@@ -17,115 +17,12 @@ function getBearerToken(
 	return normalizedToken.length > 0 ? normalizedToken : null;
 }
 
-type VerifiedApiKeyPayload = {
-	id: string;
-	configId: string;
-	referenceId: string;
-	prefix: string | null;
-	expiresAt: Date | null;
-	permissions: Record<string, string[]> | null;
-};
-
-type VerifyApiKeyResponse = {
-	valid: boolean;
-	key: unknown;
-	error?: {
-		code?: string;
-		message?: string;
-	};
-};
-
-const API_KEY_PREFIX_TO_CONFIG_ID: Record<string, string> = {
-	pk_: "public",
-	sk_: "secret",
-};
-
-const FALLBACK_API_KEY_CONFIG_IDS = ["public", "secret"] as const;
-
-function resolveConfigIdsForToken(token: string): string[] {
-	const normalizedToken = token.trim();
-	if (!normalizedToken) {
-		return [...FALLBACK_API_KEY_CONFIG_IDS];
-	}
-
-	const inferredConfigIds = Object.entries(API_KEY_PREFIX_TO_CONFIG_ID)
-		.filter(([prefix]) => normalizedToken.startsWith(prefix))
-		.map(([, configId]) => configId);
-
-	const ordered = [...inferredConfigIds, ...FALLBACK_API_KEY_CONFIG_IDS];
-	return Array.from(new Set(ordered));
-}
-
-async function verifyApiKeyThroughAuthHandler(
-	request: FastifyRequest,
-	fastify: FastifyInstance,
-	token: string,
-): Promise<VerifyApiKeyResponse | null> {
-	const verifyApiKey = (
-		fastify.auth as unknown as {
-			api?: {
-				verifyApiKey?: (input: {
-					body: {
-						key: string;
-						configId?: string;
-					};
-				}) => Promise<VerifyApiKeyResponse>;
-			};
-		}
-	).api?.verifyApiKey;
-
-	if (!verifyApiKey) {
-		request.log.error("better auth verifyApiKey API is unavailable");
-		return null;
-	}
-
-	let lastErrorPayload: VerifyApiKeyResponse | null = null;
-
-	for (const configId of resolveConfigIdsForToken(token)) {
-		// Add debug logs to trace token and configId
-		request.log.info(
-			{
-				token,
-				configIds: resolveConfigIdsForToken(token),
-			},
-			"Verifying API key with resolved config IDs",
-		);
-
-		try {
-			const payload = await verifyApiKey({
-				body: {
-					key: token,
-					configId,
-				},
-			});
-
-			request.log.info(
-				{
-					configId,
-					payload,
-				},
-				"Verification result for API key",
-			);
-
-			if (payload.valid) {
-				return payload;
-			}
-
-			lastErrorPayload = payload;
-		} catch (error) {
-			request.log.error({ error }, "Error verifying API key");
-		}
-	}
-
-	return lastErrorPayload;
-}
-
 function normalizePermissions(value: unknown): Record<string, string[]> | null {
 	if (!value || typeof value !== "object") {
 		return null;
 	}
 
-	const result: Record<string, string[]> = {};
+	const normalized: Record<string, string[]> = {};
 	for (const [resource, actions] of Object.entries(value)) {
 		if (!Array.isArray(actions)) {
 			continue;
@@ -136,14 +33,16 @@ function normalizePermissions(value: unknown): Record<string, string[]> | null {
 		});
 
 		if (validActions.length > 0) {
-			result[resource] = validActions;
+			normalized[resource] = validActions;
 		}
 	}
 
-	return Object.keys(result).length > 0 ? result : null;
+	return Object.keys(normalized).length > 0 ? normalized : null;
 }
 
-function toVerifiedApiKeyPayload(value: unknown): VerifiedApiKeyPayload | null {
+function toRequestApiKey(
+	value: unknown,
+): NonNullable<FastifyRequest["apiKey"]> | null {
 	if (!value || typeof value !== "object") {
 		return null;
 	}
@@ -165,17 +64,19 @@ function toVerifiedApiKeyPayload(value: unknown): VerifiedApiKeyPayload | null {
 		return null;
 	}
 
-	const expiresAt = candidate.expiresAt;
-	let normalizedExpiresAt: Date | null = null;
-	if (typeof expiresAt === "string") {
-		const parsedExpiresAt = new Date(expiresAt);
-		if (Number.isNaN(parsedExpiresAt.getTime())) {
+	const expiresAtRaw = candidate.expiresAt;
+	let expiresAt: Date | null = null;
+	if (expiresAtRaw === null || expiresAtRaw === undefined) {
+		expiresAt = null;
+	} else if (expiresAtRaw instanceof Date) {
+		expiresAt = expiresAtRaw;
+	} else if (typeof expiresAtRaw === "string") {
+		const parsed = new Date(expiresAtRaw);
+		if (Number.isNaN(parsed.getTime())) {
 			return null;
 		}
-		normalizedExpiresAt = parsedExpiresAt;
-	} else if (expiresAt instanceof Date) {
-		normalizedExpiresAt = expiresAt;
-	} else if (expiresAt !== null && expiresAt !== undefined) {
+		expiresAt = parsed;
+	} else {
 		return null;
 	}
 
@@ -184,7 +85,7 @@ function toVerifiedApiKeyPayload(value: unknown): VerifiedApiKeyPayload | null {
 		configId: candidate.configId,
 		referenceId: candidate.referenceId,
 		prefix: typeof candidate.prefix === "string" ? candidate.prefix : null,
-		expiresAt: normalizedExpiresAt,
+		expiresAt,
 		permissions: normalizePermissions(candidate.permissions),
 	};
 }
@@ -204,11 +105,11 @@ export default fp(async (fastify) => {
 					});
 				}
 
-				const verificationResult = await verifyApiKeyThroughAuthHandler(
-					request,
-					fastify,
-					token,
-				);
+				const verificationResult = await fastify.auth.api.verifyApiKey({
+					body: {
+						key: token,
+					},
+				});
 
 				if (!verificationResult?.valid || !verificationResult.key) {
 					request.log.warn(
@@ -225,7 +126,7 @@ export default fp(async (fastify) => {
 					});
 				}
 
-				const apiKeyContext = toVerifiedApiKeyPayload(verificationResult.key);
+				const apiKeyContext = toRequestApiKey(verificationResult.key);
 				if (!apiKeyContext) {
 					request.log.warn("api key payload missing required properties");
 					return reply.code(401).send({

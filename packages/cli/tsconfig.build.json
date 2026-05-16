@@ -2,7 +2,8 @@
 	"extends": "./tsconfig.json",
 	"compilerOptions": {
 		"outDir": "dist",
-		"declaration": true,
+		"declaration": false,
+		"skipLibCheck": true,
 		"sourceMap": false,
 		"removeComments": true,
 		"tsBuildInfoFile": "node_modules/.cache/tsconfig.build.tsbuildinfo"

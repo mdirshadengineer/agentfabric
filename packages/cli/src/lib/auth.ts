@@ -1,5 +1,5 @@
 import { apiKey } from "@better-auth/api-key";
-import { betterAuth } from "better-auth";
+import { type BetterAuthOptions, betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { admin } from "better-auth/plugins";
 import { db } from "../db/index.js";
@@ -17,7 +17,7 @@ requireEnv("DATABASE_URL");
 const betterAuthSecret = requireEnv("BETTER_AUTH_SECRET");
 const betterAuthBaseUrl = requireEnv("BETTER_AUTH_BASE_URL");
 
-export const auth = betterAuth({
+const config = {
 	basePath: "/api/v1/auth",
 	baseURL: betterAuthBaseUrl,
 	secret: betterAuthSecret,
@@ -54,4 +54,6 @@ export const auth = betterAuth({
 			},
 		]),
 	],
-}) as unknown as ReturnType<typeof betterAuth>;
+} satisfies BetterAuthOptions;
+
+export const auth = betterAuth(config);

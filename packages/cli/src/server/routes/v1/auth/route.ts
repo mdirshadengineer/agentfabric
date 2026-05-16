@@ -13,15 +13,6 @@ import { session, user } from "../../../../schema.js";
 const DEVICE_ID_HEADER = "x-device-id";
 const API_KEY_VERIFY_PATH_SUFFIX = "/api-key/verify";
 
-type VerifyApiKeyResponse = {
-	valid: boolean;
-	key: unknown;
-	error?: {
-		code?: string;
-		message?: string;
-	};
-};
-
 async function handleApiKeyVerifyCompatibilityRoute(
 	fastify: FastifyInstance,
 	request: FastifyRequest,
@@ -35,19 +26,7 @@ async function handleApiKeyVerifyCompatibilityRoute(
 		return false;
 	}
 
-	const verifyApiKey = (
-		fastify.auth as unknown as {
-			api?: {
-				verifyApiKey?: (input: {
-					body: {
-						key: string;
-						configId?: string;
-						permissions?: Record<string, string[]>;
-					};
-				}) => Promise<VerifyApiKeyResponse>;
-			};
-		}
-	).api?.verifyApiKey;
+	const verifyApiKey = fastify.auth.api.verifyApiKey;
 
 	if (!verifyApiKey) {
 		return reply.code(500).send({
