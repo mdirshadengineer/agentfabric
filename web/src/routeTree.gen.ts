@@ -9,38 +9,213 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TestTableApikeyIntegrationRouteImport } from './routes/test-table-apikey-integration'
+import { Route as TestApiPlaygroundRouteImport } from './routes/test-api-playground'
+import { Route as TestAnalyticsRouteImport } from './routes/test-analytics'
+import { Route as TestAlertBannerRouteImport } from './routes/test-alert-banner'
+import { Route as SignupRouteImport } from './routes/signup'
+import { Route as SigninRouteImport } from './routes/signin'
+import { Route as AuthRouteImport } from './routes/_auth'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthWorkspaceRouteRouteImport } from './routes/_auth/workspace/route'
+import { Route as AuthWorkspaceIndexRouteImport } from './routes/_auth/workspace/index'
+import { Route as AuthWorkspaceWorkspaceIdIndexRouteImport } from './routes/_auth/workspace/$workspaceId.index'
 
+const TestTableApikeyIntegrationRoute =
+  TestTableApikeyIntegrationRouteImport.update({
+    id: '/test-table-apikey-integration',
+    path: '/test-table-apikey-integration',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const TestApiPlaygroundRoute = TestApiPlaygroundRouteImport.update({
+  id: '/test-api-playground',
+  path: '/test-api-playground',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TestAnalyticsRoute = TestAnalyticsRouteImport.update({
+  id: '/test-analytics',
+  path: '/test-analytics',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TestAlertBannerRoute = TestAlertBannerRouteImport.update({
+  id: '/test-alert-banner',
+  path: '/test-alert-banner',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SignupRoute = SignupRouteImport.update({
+  id: '/signup',
+  path: '/signup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SigninRoute = SigninRouteImport.update({
+  id: '/signin',
+  path: '/signin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/_auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthWorkspaceRouteRoute = AuthWorkspaceRouteRouteImport.update({
+  id: '/workspace',
+  path: '/workspace',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthWorkspaceIndexRoute = AuthWorkspaceIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthWorkspaceRouteRoute,
+} as any)
+const AuthWorkspaceWorkspaceIdIndexRoute =
+  AuthWorkspaceWorkspaceIdIndexRouteImport.update({
+    id: '/$workspaceId/',
+    path: '/$workspaceId/',
+    getParentRoute: () => AuthWorkspaceRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/signin': typeof SigninRoute
+  '/signup': typeof SignupRoute
+  '/test-alert-banner': typeof TestAlertBannerRoute
+  '/test-analytics': typeof TestAnalyticsRoute
+  '/test-api-playground': typeof TestApiPlaygroundRoute
+  '/test-table-apikey-integration': typeof TestTableApikeyIntegrationRoute
+  '/workspace': typeof AuthWorkspaceRouteRouteWithChildren
+  '/workspace/': typeof AuthWorkspaceIndexRoute
+  '/workspace/$workspaceId/': typeof AuthWorkspaceWorkspaceIdIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/signin': typeof SigninRoute
+  '/signup': typeof SignupRoute
+  '/test-alert-banner': typeof TestAlertBannerRoute
+  '/test-analytics': typeof TestAnalyticsRoute
+  '/test-api-playground': typeof TestApiPlaygroundRoute
+  '/test-table-apikey-integration': typeof TestTableApikeyIntegrationRoute
+  '/workspace': typeof AuthWorkspaceIndexRoute
+  '/workspace/$workspaceId': typeof AuthWorkspaceWorkspaceIdIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_auth': typeof AuthRouteWithChildren
+  '/signin': typeof SigninRoute
+  '/signup': typeof SignupRoute
+  '/test-alert-banner': typeof TestAlertBannerRoute
+  '/test-analytics': typeof TestAnalyticsRoute
+  '/test-api-playground': typeof TestApiPlaygroundRoute
+  '/test-table-apikey-integration': typeof TestTableApikeyIntegrationRoute
+  '/_auth/workspace': typeof AuthWorkspaceRouteRouteWithChildren
+  '/_auth/workspace/': typeof AuthWorkspaceIndexRoute
+  '/_auth/workspace/$workspaceId/': typeof AuthWorkspaceWorkspaceIdIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/signin'
+    | '/signup'
+    | '/test-alert-banner'
+    | '/test-analytics'
+    | '/test-api-playground'
+    | '/test-table-apikey-integration'
+    | '/workspace'
+    | '/workspace/'
+    | '/workspace/$workspaceId/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/signin'
+    | '/signup'
+    | '/test-alert-banner'
+    | '/test-analytics'
+    | '/test-api-playground'
+    | '/test-table-apikey-integration'
+    | '/workspace'
+    | '/workspace/$workspaceId'
+  id:
+    | '__root__'
+    | '/'
+    | '/_auth'
+    | '/signin'
+    | '/signup'
+    | '/test-alert-banner'
+    | '/test-analytics'
+    | '/test-api-playground'
+    | '/test-table-apikey-integration'
+    | '/_auth/workspace'
+    | '/_auth/workspace/'
+    | '/_auth/workspace/$workspaceId/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthRoute: typeof AuthRouteWithChildren
+  SigninRoute: typeof SigninRoute
+  SignupRoute: typeof SignupRoute
+  TestAlertBannerRoute: typeof TestAlertBannerRoute
+  TestAnalyticsRoute: typeof TestAnalyticsRoute
+  TestApiPlaygroundRoute: typeof TestApiPlaygroundRoute
+  TestTableApikeyIntegrationRoute: typeof TestTableApikeyIntegrationRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/test-table-apikey-integration': {
+      id: '/test-table-apikey-integration'
+      path: '/test-table-apikey-integration'
+      fullPath: '/test-table-apikey-integration'
+      preLoaderRoute: typeof TestTableApikeyIntegrationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/test-api-playground': {
+      id: '/test-api-playground'
+      path: '/test-api-playground'
+      fullPath: '/test-api-playground'
+      preLoaderRoute: typeof TestApiPlaygroundRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/test-analytics': {
+      id: '/test-analytics'
+      path: '/test-analytics'
+      fullPath: '/test-analytics'
+      preLoaderRoute: typeof TestAnalyticsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/test-alert-banner': {
+      id: '/test-alert-banner'
+      path: '/test-alert-banner'
+      fullPath: '/test-alert-banner'
+      preLoaderRoute: typeof TestAlertBannerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/signup': {
+      id: '/signup'
+      path: '/signup'
+      fullPath: '/signup'
+      preLoaderRoute: typeof SignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/signin': {
+      id: '/signin'
+      path: '/signin'
+      fullPath: '/signin'
+      preLoaderRoute: typeof SigninRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_auth': {
+      id: '/_auth'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,11 +223,62 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_auth/workspace': {
+      id: '/_auth/workspace'
+      path: '/workspace'
+      fullPath: '/workspace'
+      preLoaderRoute: typeof AuthWorkspaceRouteRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/workspace/': {
+      id: '/_auth/workspace/'
+      path: '/'
+      fullPath: '/workspace/'
+      preLoaderRoute: typeof AuthWorkspaceIndexRouteImport
+      parentRoute: typeof AuthWorkspaceRouteRoute
+    }
+    '/_auth/workspace/$workspaceId/': {
+      id: '/_auth/workspace/$workspaceId/'
+      path: '/$workspaceId'
+      fullPath: '/workspace/$workspaceId/'
+      preLoaderRoute: typeof AuthWorkspaceWorkspaceIdIndexRouteImport
+      parentRoute: typeof AuthWorkspaceRouteRoute
+    }
   }
 }
 
+interface AuthWorkspaceRouteRouteChildren {
+  AuthWorkspaceIndexRoute: typeof AuthWorkspaceIndexRoute
+  AuthWorkspaceWorkspaceIdIndexRoute: typeof AuthWorkspaceWorkspaceIdIndexRoute
+}
+
+const AuthWorkspaceRouteRouteChildren: AuthWorkspaceRouteRouteChildren = {
+  AuthWorkspaceIndexRoute: AuthWorkspaceIndexRoute,
+  AuthWorkspaceWorkspaceIdIndexRoute: AuthWorkspaceWorkspaceIdIndexRoute,
+}
+
+const AuthWorkspaceRouteRouteWithChildren =
+  AuthWorkspaceRouteRoute._addFileChildren(AuthWorkspaceRouteRouteChildren)
+
+interface AuthRouteChildren {
+  AuthWorkspaceRouteRoute: typeof AuthWorkspaceRouteRouteWithChildren
+}
+
+const AuthRouteChildren: AuthRouteChildren = {
+  AuthWorkspaceRouteRoute: AuthWorkspaceRouteRouteWithChildren,
+}
+
+const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthRoute: AuthRouteWithChildren,
+  SigninRoute: SigninRoute,
+  SignupRoute: SignupRoute,
+  TestAlertBannerRoute: TestAlertBannerRoute,
+  TestAnalyticsRoute: TestAnalyticsRoute,
+  TestApiPlaygroundRoute: TestApiPlaygroundRoute,
+  TestTableApikeyIntegrationRoute: TestTableApikeyIntegrationRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

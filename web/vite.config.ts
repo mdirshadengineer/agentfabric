@@ -20,4 +20,9 @@ export default defineConfig({
 	build: {
 		outDir: "build",
 	},
+	server: {
+		allowedHosts: [
+			"60ae-2a00-5400-e266-2f8c-95fc-9824-6289-fcd0.ngrok-free.app",
+		],
+	},
 })

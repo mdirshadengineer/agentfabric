@@ -23,13 +23,7 @@
 	"engines": {
 		"node": ">=24"
 	},
-	"files": [
-		"dist",
-		"bin",
-		"README.md",
-		"CHANGELOG.md",
-		"package.json"
-	],
+	"files": ["dist", "bin", "README.md", "CHANGELOG.md", "package.json"],
 	"scripts": {
 		"start": "node ./bin/agentfabric",
 		"dev": "tsx watch src/dev/main.ts",

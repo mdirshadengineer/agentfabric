@@ -7,6 +7,14 @@ import type { session, user } from "../../schema.ts";
 
 type User = InferSelectModel<typeof user>;
 type Session = InferSelectModel<typeof session>;
+type ApiKeyContext = {
+	id: string;
+	configId: string;
+	referenceId: string;
+	prefix: string | null;
+	expiresAt: Date | null;
+	permissions: Record<string, string[]> | null;
+};
 
 /** Reusable hook signature used by authenticate / rejectAuthenticated decorators */
 type AuthHook = (request: FastifyRequest, reply: FastifyReply) => Promise<void>;
@@ -26,6 +34,11 @@ declare module "fastify" {
 		 * Use on auth routes (sign-in, sign-up) to prevent double sign-in.
 		 */
 		rejectAuthenticated: AuthHook;
+		/**
+		 * Validates Bearer API keys and populates `request.apiKey`.
+		 * Returns 401 when key is missing/invalid/expired.
+		 */
+		authenticateApiKey: AuthHook;
 	}
 
 	interface FastifyRequest {
@@ -44,5 +57,6 @@ declare module "fastify" {
 			userAgent: Session["userAgent"];
 			deviceId: Session["deviceId"];
 		};
+		apiKey?: ApiKeyContext;
 	}
 }

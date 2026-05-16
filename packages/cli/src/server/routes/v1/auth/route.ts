@@ -11,6 +11,104 @@ import {
 import { session, user } from "../../../../schema.js";
 
 const DEVICE_ID_HEADER = "x-device-id";
+const API_KEY_VERIFY_PATH_SUFFIX = "/api-key/verify";
+
+type VerifyApiKeyResponse = {
+	valid: boolean;
+	key: unknown;
+	error?: {
+		code?: string;
+		message?: string;
+	};
+};
+
+async function handleApiKeyVerifyCompatibilityRoute(
+	fastify: FastifyInstance,
+	request: FastifyRequest,
+	reply: FastifyReply,
+	requestUrl: URL,
+): Promise<boolean> {
+	if (
+		request.method !== "POST" ||
+		!requestUrl.pathname.endsWith(API_KEY_VERIFY_PATH_SUFFIX)
+	) {
+		return false;
+	}
+
+	const verifyApiKey = (
+		fastify.auth as unknown as {
+			api?: {
+				verifyApiKey?: (input: {
+					body: {
+						key: string;
+						configId?: string;
+						permissions?: Record<string, string[]>;
+					};
+				}) => Promise<VerifyApiKeyResponse>;
+			};
+		}
+	).api?.verifyApiKey;
+
+	if (!verifyApiKey) {
+		return reply.code(500).send({
+			code: "AUTH_API_UNAVAILABLE",
+			message: "API key verification service is unavailable",
+		});
+	}
+
+	const body =
+		request.body && typeof request.body === "object"
+			? (request.body as {
+					key?: unknown;
+					configId?: unknown;
+					permissions?: unknown;
+				})
+			: null;
+
+	if (!body || typeof body.key !== "string" || body.key.trim().length === 0) {
+		return reply.code(400).send({
+			code: "INVALID_REQUEST_BODY",
+			message: "key is required",
+		});
+	}
+
+	const requestBody: {
+		key: string;
+		configId?: string;
+		permissions?: Record<string, string[]>;
+	} = {
+		key: body.key.trim(),
+	};
+
+	if (typeof body.configId === "string" && body.configId.trim().length > 0) {
+		requestBody.configId = body.configId.trim();
+	}
+
+	if (body.permissions && typeof body.permissions === "object") {
+		requestBody.permissions = body.permissions as Record<string, string[]>;
+	}
+
+	// Add debug logs to trace API key verification
+	request.log.info(
+		{
+			body: request.body,
+			headers: request.headers,
+		},
+		"Incoming request for API key verification",
+	);
+
+	const verificationResult = await verifyApiKey({ body: requestBody });
+
+	request.log.info(
+		{
+			requestBody,
+			verificationResult,
+		},
+		"API key verification result",
+	);
+
+	return reply.code(200).send(verificationResult);
+}
 
 async function resolveUserIdByEmail(
 	fastify: FastifyInstance,
@@ -197,6 +295,18 @@ export default async function (fastify: FastifyInstance) {
 		handler: async (request: FastifyRequest, reply: FastifyReply) => {
 			const host = request.headers.host ?? "localhost";
 			const requestUrl = new URL(request.url, `${request.protocol}://${host}`);
+
+			const handledCompatibilityRoute =
+				await handleApiKeyVerifyCompatibilityRoute(
+					fastify,
+					request,
+					reply,
+					requestUrl,
+				);
+			if (handledCompatibilityRoute) {
+				return;
+			}
+
 			const isEmailSignInRequest = isEmailSignInPath(requestUrl.pathname);
 			const signInEmail = isEmailSignInRequest
 				? extractEmailFromPayload(request.body)
@@ -404,7 +514,7 @@ export default async function (fastify: FastifyInstance) {
 				}
 			}
 
-			reply.status(authResponse.status);
+			// reply.status(authResponse.status);
 			authResponse.headers.forEach((value, key) => {
 				reply.header(key, value);
 			});
@@ -415,9 +525,7 @@ export default async function (fastify: FastifyInstance) {
 				"auth response",
 			);
 
-			return responseBody.length === 0
-				? reply.send()
-				: reply.send(responseBody);
+			return reply.status(authResponse.status).send(responseBody);
 		},
 	});
 }

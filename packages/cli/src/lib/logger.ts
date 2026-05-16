@@ -13,7 +13,7 @@ export function createFastifyLoggerOptions() {
 				options: {
 					colorize: true,
 					ignore: "pid,hostname",
-					translateTime: "HH:MM:ss Z"
+					translateTime: "HH:MM:ss Z",
 				},
 			},
 		};
