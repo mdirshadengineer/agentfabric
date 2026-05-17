@@ -29,7 +29,10 @@ const config = {
 		requireEmailVerification: false,
 	},
 	plugins: [
-		admin(),
+		admin({
+			adminRoles: ["admin"],
+			defaultRole: "user",
+		}),
 		apiKey([
 			{
 				configId: "public",

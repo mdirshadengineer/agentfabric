@@ -72,7 +72,7 @@ export const postgresClient = postgres(connectionString, {
 		"DB_POOL_SIZE",
 	),
 	// Require SSL in production by default (override with DB_SSL)
-	ssl: shouldEnableDbSsl() ? "require" : false,
+	// ssl: shouldEnableDbSsl() ? "require" : false,
 	// Suppress informational notices from Postgres
 	onnotice: () => {},
 });

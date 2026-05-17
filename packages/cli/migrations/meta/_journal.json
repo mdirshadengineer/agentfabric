@@ -1,27 +1,20 @@
 {
-	"version": "7",
-	"dialect": "postgresql",
-	"entries": [
-		{
-			"idx": 0,
-			"version": "7",
-			"when": 1778851524419,
-			"tag": "0000_stale_ben_parker",
-			"breakpoints": true
-		},
-		{
-			"idx": 1,
-			"version": "7",
-			"when": 1778853108693,
-			"tag": "0001_glossy_lionheart",
-			"breakpoints": true
-		},
-		{
-			"idx": 2,
-			"version": "7",
-			"when": 1778857758300,
-			"tag": "0002_brisk_aurora",
-			"breakpoints": true
-		}
-	]
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1778949593846,
+      "tag": "0000_tricky_edwin_jarvis",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1778951396136,
+      "tag": "0001_outstanding_mystique",
+      "breakpoints": true
+    }
+  ]
 }

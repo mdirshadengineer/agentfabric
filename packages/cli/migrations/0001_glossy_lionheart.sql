@@ -1,1 +1,0 @@
-ALTER TABLE "session" ADD COLUMN "device_id" text;

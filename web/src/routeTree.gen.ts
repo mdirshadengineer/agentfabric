@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TestTableApikeyIntegrationRouteImport } from './routes/test-table-apikey-integration'
+import { Route as TestImpersonateUserRouteImport } from './routes/test-impersonate-user'
 import { Route as TestApiPlaygroundRouteImport } from './routes/test-api-playground'
 import { Route as TestAnalyticsRouteImport } from './routes/test-analytics'
 import { Route as TestAlertBannerRouteImport } from './routes/test-alert-banner'
@@ -27,6 +28,11 @@ const TestTableApikeyIntegrationRoute =
     path: '/test-table-apikey-integration',
     getParentRoute: () => rootRouteImport,
   } as any)
+const TestImpersonateUserRoute = TestImpersonateUserRouteImport.update({
+  id: '/test-impersonate-user',
+  path: '/test-impersonate-user',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TestApiPlaygroundRoute = TestApiPlaygroundRouteImport.update({
   id: '/test-api-playground',
   path: '/test-api-playground',
@@ -85,6 +91,7 @@ export interface FileRoutesByFullPath {
   '/test-alert-banner': typeof TestAlertBannerRoute
   '/test-analytics': typeof TestAnalyticsRoute
   '/test-api-playground': typeof TestApiPlaygroundRoute
+  '/test-impersonate-user': typeof TestImpersonateUserRoute
   '/test-table-apikey-integration': typeof TestTableApikeyIntegrationRoute
   '/workspace': typeof AuthWorkspaceRouteRouteWithChildren
   '/workspace/': typeof AuthWorkspaceIndexRoute
@@ -97,6 +104,7 @@ export interface FileRoutesByTo {
   '/test-alert-banner': typeof TestAlertBannerRoute
   '/test-analytics': typeof TestAnalyticsRoute
   '/test-api-playground': typeof TestApiPlaygroundRoute
+  '/test-impersonate-user': typeof TestImpersonateUserRoute
   '/test-table-apikey-integration': typeof TestTableApikeyIntegrationRoute
   '/workspace': typeof AuthWorkspaceIndexRoute
   '/workspace/$workspaceId': typeof AuthWorkspaceWorkspaceIdIndexRoute
@@ -110,6 +118,7 @@ export interface FileRoutesById {
   '/test-alert-banner': typeof TestAlertBannerRoute
   '/test-analytics': typeof TestAnalyticsRoute
   '/test-api-playground': typeof TestApiPlaygroundRoute
+  '/test-impersonate-user': typeof TestImpersonateUserRoute
   '/test-table-apikey-integration': typeof TestTableApikeyIntegrationRoute
   '/_auth/workspace': typeof AuthWorkspaceRouteRouteWithChildren
   '/_auth/workspace/': typeof AuthWorkspaceIndexRoute
@@ -124,6 +133,7 @@ export interface FileRouteTypes {
     | '/test-alert-banner'
     | '/test-analytics'
     | '/test-api-playground'
+    | '/test-impersonate-user'
     | '/test-table-apikey-integration'
     | '/workspace'
     | '/workspace/'
@@ -136,6 +146,7 @@ export interface FileRouteTypes {
     | '/test-alert-banner'
     | '/test-analytics'
     | '/test-api-playground'
+    | '/test-impersonate-user'
     | '/test-table-apikey-integration'
     | '/workspace'
     | '/workspace/$workspaceId'
@@ -148,6 +159,7 @@ export interface FileRouteTypes {
     | '/test-alert-banner'
     | '/test-analytics'
     | '/test-api-playground'
+    | '/test-impersonate-user'
     | '/test-table-apikey-integration'
     | '/_auth/workspace'
     | '/_auth/workspace/'
@@ -162,6 +174,7 @@ export interface RootRouteChildren {
   TestAlertBannerRoute: typeof TestAlertBannerRoute
   TestAnalyticsRoute: typeof TestAnalyticsRoute
   TestApiPlaygroundRoute: typeof TestApiPlaygroundRoute
+  TestImpersonateUserRoute: typeof TestImpersonateUserRoute
   TestTableApikeyIntegrationRoute: typeof TestTableApikeyIntegrationRoute
 }
 
@@ -172,6 +185,13 @@ declare module '@tanstack/react-router' {
       path: '/test-table-apikey-integration'
       fullPath: '/test-table-apikey-integration'
       preLoaderRoute: typeof TestTableApikeyIntegrationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/test-impersonate-user': {
+      id: '/test-impersonate-user'
+      path: '/test-impersonate-user'
+      fullPath: '/test-impersonate-user'
+      preLoaderRoute: typeof TestImpersonateUserRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/test-api-playground': {
@@ -278,6 +298,7 @@ const rootRouteChildren: RootRouteChildren = {
   TestAlertBannerRoute: TestAlertBannerRoute,
   TestAnalyticsRoute: TestAnalyticsRoute,
   TestApiPlaygroundRoute: TestApiPlaygroundRoute,
+  TestImpersonateUserRoute: TestImpersonateUserRoute,
   TestTableApikeyIntegrationRoute: TestTableApikeyIntegrationRoute,
 }
 export const routeTree = rootRouteImport

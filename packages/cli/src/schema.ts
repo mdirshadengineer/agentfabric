@@ -25,6 +25,50 @@ export const user = pgTable("user", {
 		.notNull(),
 });
 
+export const roleDefinition = pgTable(
+	"role_definition",
+	{
+		id: text("id").primaryKey(),
+		name: text("name").notNull().unique(),
+		description: text("description"),
+		createdAt: timestamp("created_at", {
+			precision: 6,
+			withTimezone: true,
+		})
+			.defaultNow()
+			.notNull(),
+		updatedAt: timestamp("updated_at", {
+			precision: 6,
+			withTimezone: true,
+		})
+			.defaultNow()
+			.$onUpdate(() => /* @__PURE__ */ new Date())
+			.notNull(),
+	},
+	(table) => [index("role_definition_name_idx").on(table.name)],
+);
+
+export const rolePermission = pgTable(
+	"role_permission",
+	{
+		id: text("id").primaryKey(),
+		roleId: text("role_id")
+			.notNull()
+			.references(() => roleDefinition.id, { onDelete: "cascade" }),
+		permission: text("permission", { enum: ["manage_users", "view_audit", "manage_roles", "manage_api_keys"] }).notNull(),
+		createdAt: timestamp("created_at", {
+			precision: 6,
+			withTimezone: true,
+		})
+			.defaultNow()
+			.notNull(),
+	},
+	(table) => [
+		index("role_permission_role_id_idx").on(table.roleId),
+		index("role_permission_permission_idx").on(table.permission),
+	],
+);
+
 export const session = pgTable(
 	"session",
 	{

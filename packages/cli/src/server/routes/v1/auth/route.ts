@@ -1,6 +1,7 @@
 import { fromNodeHeaders } from "better-auth/node";
 import { desc, eq, inArray } from "drizzle-orm";
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
+import { inferApiKeyConfigIdFromKey } from "../../../../lib/api-key-config.js";
 import {
 	type AuthSessionPolicyConfig,
 	extractDeviceIdFromPayload,
@@ -13,26 +14,33 @@ import { session, user } from "../../../../schema.js";
 const DEVICE_ID_HEADER = "x-device-id";
 const API_KEY_VERIFY_PATH_SUFFIX = "/api-key/verify";
 
+type CompatibilityRouteResult = {
+	statusCode: number;
+	payload: unknown;
+} | null;
+
 async function handleApiKeyVerifyCompatibilityRoute(
 	fastify: FastifyInstance,
 	request: FastifyRequest,
-	reply: FastifyReply,
 	requestUrl: URL,
-): Promise<boolean> {
+): Promise<CompatibilityRouteResult> {
 	if (
 		request.method !== "POST" ||
 		!requestUrl.pathname.endsWith(API_KEY_VERIFY_PATH_SUFFIX)
 	) {
-		return false;
+		return null;
 	}
 
 	const verifyApiKey = fastify.auth.api.verifyApiKey;
 
 	if (!verifyApiKey) {
-		return reply.code(500).send({
-			code: "AUTH_API_UNAVAILABLE",
-			message: "API key verification service is unavailable",
-		});
+		return {
+			statusCode: 500,
+			payload: {
+				code: "AUTH_API_UNAVAILABLE",
+				message: "API key verification service is unavailable",
+			},
+		};
 	}
 
 	const body =
@@ -45,10 +53,13 @@ async function handleApiKeyVerifyCompatibilityRoute(
 			: null;
 
 	if (!body || typeof body.key !== "string" || body.key.trim().length === 0) {
-		return reply.code(400).send({
-			code: "INVALID_REQUEST_BODY",
-			message: "key is required",
-		});
+		return {
+			statusCode: 400,
+			payload: {
+				code: "INVALID_REQUEST_BODY",
+				message: "key is required",
+			},
+		};
 	}
 
 	const requestBody: {
@@ -59,8 +70,13 @@ async function handleApiKeyVerifyCompatibilityRoute(
 		key: body.key.trim(),
 	};
 
-	if (typeof body.configId === "string" && body.configId.trim().length > 0) {
-		requestBody.configId = body.configId.trim();
+	const configId =
+		typeof body.configId === "string" && body.configId.trim().length > 0
+			? body.configId.trim()
+			: inferApiKeyConfigIdFromKey(requestBody.key);
+
+	if (configId) {
+		requestBody.configId = configId;
 	}
 
 	if (body.permissions && typeof body.permissions === "object") {
@@ -86,7 +102,10 @@ async function handleApiKeyVerifyCompatibilityRoute(
 		"API key verification result",
 	);
 
-	return reply.code(200).send(verificationResult);
+	return {
+		statusCode: 200,
+		payload: verificationResult,
+	};
 }
 
 async function resolveUserIdByEmail(
@@ -133,13 +152,24 @@ async function getUserSessionSnapshots(
 	return rows;
 }
 
+// Safe device ID: printable ASCII excluding control chars and whitespace, max 128 chars.
+const DEVICE_ID_PATTERN = /^[\w\-.:@]{1,128}$/;
+
 function normalizeDeviceId(value: string | null): string | null {
 	if (!value) {
 		return null;
 	}
 
 	const normalized = value.trim();
-	return normalized.length > 0 ? normalized : null;
+	if (normalized.length === 0) {
+		return null;
+	}
+
+	if (!DEVICE_ID_PATTERN.test(normalized)) {
+		return null;
+	}
+
+	return normalized;
 }
 
 function normalizeIpAddress(value: string | null): string | null {
@@ -279,11 +309,12 @@ export default async function (fastify: FastifyInstance) {
 				await handleApiKeyVerifyCompatibilityRoute(
 					fastify,
 					request,
-					reply,
 					requestUrl,
 				);
 			if (handledCompatibilityRoute) {
-				return;
+				return reply
+					.code(handledCompatibilityRoute.statusCode)
+					.send(handledCompatibilityRoute.payload);
 			}
 
 			const isEmailSignInRequest = isEmailSignInPath(requestUrl.pathname);

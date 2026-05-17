@@ -1,5 +1,7 @@
+import type { ApiKey } from "@better-auth/api-key";
 import type { FastifyReply, FastifyRequest } from "fastify";
 import fp from "fastify-plugin";
+import { inferApiKeyConfigIdFromKey } from "../../lib/api-key-config.js";
 
 function getBearerToken(
 	authorizationHeader: string | undefined,
@@ -17,17 +19,15 @@ function getBearerToken(
 	return normalizedToken.length > 0 ? normalizedToken : null;
 }
 
-function normalizePermissions(value: unknown): Record<string, string[]> | null {
-	if (!value || typeof value !== "object") {
+function normalizePermissions(
+	value: ApiKey["permissions"],
+): Record<string, string[]> | null {
+	if (!value) {
 		return null;
 	}
 
 	const normalized: Record<string, string[]> = {};
 	for (const [resource, actions] of Object.entries(value)) {
-		if (!Array.isArray(actions)) {
-			continue;
-		}
-
 		const validActions = actions.filter((action): action is string => {
 			return typeof action === "string";
 		});
@@ -41,52 +41,15 @@ function normalizePermissions(value: unknown): Record<string, string[]> | null {
 }
 
 function toRequestApiKey(
-	value: unknown,
-): NonNullable<FastifyRequest["apiKey"]> | null {
-	if (!value || typeof value !== "object") {
-		return null;
-	}
-
-	const candidate = value as {
-		id?: unknown;
-		configId?: unknown;
-		referenceId?: unknown;
-		prefix?: unknown;
-		expiresAt?: unknown;
-		permissions?: unknown;
-	};
-
-	if (
-		typeof candidate.id !== "string" ||
-		typeof candidate.configId !== "string" ||
-		typeof candidate.referenceId !== "string"
-	) {
-		return null;
-	}
-
-	const expiresAtRaw = candidate.expiresAt;
-	let expiresAt: Date | null = null;
-	if (expiresAtRaw === null || expiresAtRaw === undefined) {
-		expiresAt = null;
-	} else if (expiresAtRaw instanceof Date) {
-		expiresAt = expiresAtRaw;
-	} else if (typeof expiresAtRaw === "string") {
-		const parsed = new Date(expiresAtRaw);
-		if (Number.isNaN(parsed.getTime())) {
-			return null;
-		}
-		expiresAt = parsed;
-	} else {
-		return null;
-	}
-
+	key: Omit<ApiKey, "key">,
+): NonNullable<FastifyRequest["apiKey"]> {
 	return {
-		id: candidate.id,
-		configId: candidate.configId,
-		referenceId: candidate.referenceId,
-		prefix: typeof candidate.prefix === "string" ? candidate.prefix : null,
-		expiresAt,
-		permissions: normalizePermissions(candidate.permissions),
+		id: key.id,
+		configId: key.configId,
+		referenceId: key.referenceId,
+		prefix: key.prefix,
+		expiresAt: key.expiresAt,
+		permissions: normalizePermissions(key.permissions),
 	};
 }
 
@@ -108,6 +71,7 @@ export default fp(async (fastify) => {
 				const verificationResult = await fastify.auth.api.verifyApiKey({
 					body: {
 						key: token,
+						configId: inferApiKeyConfigIdFromKey(token) ?? undefined,
 					},
 				});
 
@@ -126,23 +90,7 @@ export default fp(async (fastify) => {
 					});
 				}
 
-				const apiKeyContext = toRequestApiKey(verificationResult.key);
-				if (!apiKeyContext) {
-					request.log.warn("api key payload missing required properties");
-					return reply.code(401).send({
-						code: "UNAUTHORIZED",
-						message: "Invalid API key",
-					});
-				}
-
-				if (apiKeyContext.expiresAt && apiKeyContext.expiresAt <= new Date()) {
-					return reply.code(401).send({
-						code: "UNAUTHORIZED",
-						message: "API key has expired",
-					});
-				}
-
-				request.apiKey = apiKeyContext;
+				request.apiKey = toRequestApiKey(verificationResult.key);
 			} catch (error: unknown) {
 				request.log.error({ error }, "api key authentication failed");
 				return reply.code(500).send({
