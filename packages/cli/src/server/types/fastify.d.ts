@@ -37,6 +37,7 @@ declare module "fastify" {
 
 	interface FastifyRequest {
 		logStartedAt?: number;
+		metricsStartedAt?: number;
 		user?: {
 			id: User["id"];
 			name: User["name"];

@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { performance } from "node:perf_hooks";
 import type { FastifyInstance } from "fastify";
 import fp from "fastify-plugin";
+import { incrementLogEntryMetric } from "../../lib/prometheus.js";
 import { serverLog } from "../../schema.js";
 
 function resolveStatusLevel(statusCode: number): "info" | "warn" | "error" {
@@ -59,6 +60,7 @@ async function persistServerLog(
 			id: randomUUID(),
 			...entry,
 		});
+		incrementLogEntryMetric(entry.level, entry.scope);
 	} catch (error: unknown) {
 		fastify.log.warn(
 			{ error },
