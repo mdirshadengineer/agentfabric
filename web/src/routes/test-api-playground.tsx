@@ -80,23 +80,6 @@ function normalizeNumberInput(value: string): number | null {
 	return parsed
 }
 
-function inferConfigIdFromKey(key: string): "public" | "secret" | undefined {
-	const normalizedKey = key.trim()
-	if (!normalizedKey) {
-		return undefined
-	}
-
-	if (normalizedKey.startsWith("sk_")) {
-		return "secret"
-	}
-
-	if (normalizedKey.startsWith("pk_") || normalizedKey.startsWith("af_")) {
-		return "public"
-	}
-
-	return undefined
-}
-
 function ResultPanel({
 	title,
 	description,
@@ -150,8 +133,7 @@ function RouteComponent() {
 	const [email, setEmail] = useState("mdirshadengineer@gmail.com")
 	const [password, setPassword] = useState("Developer@123")
 	const [apiKeyName, setApiKeyName] = useState("agentfabric-web")
-	const [configId, setConfigId] = useState("")
-	const [prefix, setPrefix] = useState("af_")
+	const [configId, setConfigId] = useState<"public" | "secret">("public")
 	const [expiresInSeconds, setExpiresInSeconds] = useState("86400")
 	const [metadataJson, setMetadataJson] = useState(
 		'{"source":"web-dashboard","project":"agentfabric"}'
@@ -244,13 +226,14 @@ function RouteComponent() {
 		try {
 			const parsedMetadata = parseJsonInput(metadataJson)
 			const normalizedExpiresIn = normalizeNumberInput(expiresInSeconds)
-			const selectedConfigId = configId.trim() || "public"
+			const selectedConfigId = configId
 			const metadataAllowed = selectedConfigId === "secret"
+			const prefix = selectedConfigId === "secret" ? "sk_" : "pk_"
 
 			const createdApiKey = await authClient.apiKey.create({
 				configId: selectedConfigId,
 				name: apiKeyName.trim() || undefined,
-				prefix: prefix.trim() || undefined,
+				prefix,
 				expiresIn: normalizedExpiresIn ?? undefined,
 				metadata: metadataAllowed ? parsedMetadata : undefined,
 			})
@@ -280,9 +263,7 @@ function RouteComponent() {
 		try {
 			const parsedPermissions = parseJsonInput(permissionsJson)
 			const normalizedKey = apiKeyToVerify.trim()
-			const configuredConfigId = configId.trim()
-			const inferredConfigId = inferConfigIdFromKey(normalizedKey)
-			const resolvedConfigId = configuredConfigId || inferredConfigId
+			const resolvedConfigId = configId
 
 			if (!normalizedKey) {
 				throw new Error("API key is required")
@@ -312,7 +293,7 @@ function RouteComponent() {
 			setVerificationResult(verification)
 			setStatusMessage(
 				response.ok
-					? `API key verification completed${resolvedConfigId ? ` for ${resolvedConfigId} config` : ""}.`
+					? `API key verification completed for ${resolvedConfigId} config.`
 					: "API key verification returned an error."
 			)
 		} catch (error) {
@@ -528,23 +509,19 @@ function RouteComponent() {
 								</div>
 								<div className="space-y-2">
 									<FieldLabel>Config ID</FieldLabel>
-									<Input
+									<select
+										className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 dark:border-white/10 dark:bg-slate-900 dark:text-slate-100"
 										value={configId}
-										onChange={(event) => setConfigId(event.target.value)}
-										placeholder="optional: public or secret"
-									/>
+										onChange={(event) =>
+											setConfigId(event.target.value as "public" | "secret")
+										}
+									>
+										<option value="public">public (pk_)</option>
+										<option value="secret">secret (sk_)</option>
+									</select>
 									<p className="text-xs text-slate-500 dark:text-slate-400">
-										Leave blank to auto-detect when verifying (sk_ = secret,
-										pk_/af_ = public).
+										Choose the config type. Prefix will be set automatically.
 									</p>
-								</div>
-								<div className="space-y-2">
-									<FieldLabel>Prefix</FieldLabel>
-									<Input
-										value={prefix}
-										onChange={(event) => setPrefix(event.target.value)}
-										placeholder="af_"
-									/>
 								</div>
 								<div className="space-y-2">
 									<FieldLabel>Expires in seconds</FieldLabel>

@@ -35,6 +35,10 @@ function parsePositiveIntegerEnv(
 function shouldEnableDbSsl(): boolean {
 	const raw = process.env.DB_SSL;
 	if (raw === undefined) {
+		if (process.env.IS_MANUAL_TESTING === "true") {
+			// During manual testing, default to no SSL for convenience
+			return false;
+		}
 		return isProduction;
 	}
 
@@ -72,7 +76,7 @@ export const postgresClient = postgres(connectionString, {
 		"DB_POOL_SIZE",
 	),
 	// Require SSL in production by default (override with DB_SSL)
-	// ssl: shouldEnableDbSsl() ? "require" : false,
+	ssl: shouldEnableDbSsl() ? "require" : false,
 	// Suppress informational notices from Postgres
 	onnotice: () => {},
 });

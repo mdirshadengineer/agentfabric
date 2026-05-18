@@ -55,7 +55,9 @@ export const rolePermission = pgTable(
 		roleId: text("role_id")
 			.notNull()
 			.references(() => roleDefinition.id, { onDelete: "cascade" }),
-		permission: text("permission", { enum: ["manage_users", "view_audit", "manage_roles", "manage_api_keys"] }).notNull(),
+		permission: text("permission", {
+			enum: ["manage_users", "view_audit", "manage_roles", "manage_api_keys"],
+		}).notNull(),
 		createdAt: timestamp("created_at", {
 			precision: 6,
 			withTimezone: true,

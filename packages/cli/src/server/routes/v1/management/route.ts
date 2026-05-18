@@ -80,20 +80,17 @@ async function setUserRoleWithBetterAuth(
 }
 
 export default async function (fastify: FastifyInstance) {
-	fastify.get(
-		"/me",
-		async (request: FastifyRequest, reply: FastifyReply) => {
-			if (!(await ensureAuthenticated(request, reply))) {
-				return;
-			}
+	fastify.get("/me", async (request: FastifyRequest, reply: FastifyReply) => {
+		if (!(await ensureAuthenticated(request, reply))) {
+			return;
+		}
 
-			return reply.send({
-				user: request.user,
-				session: request.session,
-				isImpersonating: Boolean(request.session?.impersonatedBy),
-			});
-		},
-	);
+		return reply.send({
+			user: request.user,
+			session: request.session,
+			isImpersonating: Boolean(request.session?.impersonatedBy),
+		});
+	});
 
 	fastify.post(
 		"/bootstrap-admin",
@@ -118,7 +115,8 @@ export default async function (fastify: FastifyInstance) {
 			if (hasAnyAdmin && request.user.role !== "admin") {
 				return reply.code(403).send({
 					code: "ADMIN_BOOTSTRAP_LOCKED",
-					message: "Admin already exists. Ask an existing admin to grant access.",
+					message:
+						"Admin already exists. Ask an existing admin to grant access.",
 				});
 			}
 
@@ -165,7 +163,7 @@ export default async function (fastify: FastifyInstance) {
 						...role,
 						permissions: perms.map((p) => p.permission),
 					};
-				})
+				}),
 			);
 
 			return reply.send({ roles: rolesWithPermissions });
@@ -214,11 +212,18 @@ export default async function (fastify: FastifyInstance) {
 			await fastify.db.insert(roleDefinition).values(createdRole);
 
 			// Insert permissions if provided
-			if (Array.isArray(request.body?.permissions) && request.body.permissions.length > 0) {
+			if (
+				Array.isArray(request.body?.permissions) &&
+				request.body.permissions.length > 0
+			) {
 				const permissionRecords = request.body.permissions.map((perm) => ({
 					id: randomUUID(),
 					roleId,
-					permission: perm as "manage_users" | "view_audit" | "manage_roles" | "manage_api_keys",
+					permission: perm as
+						| "manage_users"
+						| "view_audit"
+						| "manage_roles"
+						| "manage_api_keys",
 				}));
 				await fastify.db.insert(rolePermission).values(permissionRecords);
 			}
@@ -301,13 +306,13 @@ export default async function (fastify: FastifyInstance) {
 			}
 
 			const nextDescription = hasDescription
-				? (request.body?.description?.trim() || null)
+				? request.body?.description?.trim() || null
 				: undefined;
 
-			const updateData: any = {
+			const updateData = {
 				name: nextName,
+				description: nextDescription,
 			};
-			if (hasDescription) updateData.description = nextDescription;
 
 			await fastify.db
 				.update(roleDefinition)
@@ -326,7 +331,11 @@ export default async function (fastify: FastifyInstance) {
 					const permissionRecords = request.body.permissions.map((perm) => ({
 						id: randomUUID(),
 						roleId,
-						permission: perm as "manage_users" | "view_audit" | "manage_roles" | "manage_api_keys",
+						permission: perm as
+							| "manage_users"
+							| "view_audit"
+							| "manage_roles"
+							| "manage_api_keys",
 					}));
 					await fastify.db.insert(rolePermission).values(permissionRecords);
 				}
@@ -348,7 +357,9 @@ export default async function (fastify: FastifyInstance) {
 				roleId,
 				name: nextName,
 				description: hasDescription ? nextDescription : undefined,
-				permissions: hasPermissions ? (request.body?.permissions ?? []) : undefined,
+				permissions: hasPermissions
+					? (request.body?.permissions ?? [])
+					: undefined,
 			});
 		},
 	);
@@ -426,7 +437,11 @@ export default async function (fastify: FastifyInstance) {
 
 			await setUserRoleWithBetterAuth(request, userId, nextRole);
 
-			return reply.send({ message: "User role updated", userId, role: nextRole });
+			return reply.send({
+				message: "User role updated",
+				userId,
+				role: nextRole,
+			});
 		},
 	);
 }
