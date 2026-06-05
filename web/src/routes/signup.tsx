@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { authClient } from "@/lib/auth"
+import { useSignUp } from "@/features/auth/queries/mutations"
 
 export const Route = createFileRoute("/signup")({
 	component: SignUpRoute,
@@ -29,43 +29,37 @@ export const Route = createFileRoute("/signup")({
 
 function SignUpRoute() {
 	const navigate = useNavigate()
+	const signUp = useSignUp()
 	const [fullName, setFullName] = useState("")
 	const [email, setEmail] = useState("")
 	const [password, setPassword] = useState("")
-	const [isSubmitting, setIsSubmitting] = useState(false)
-	const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
 	async function handleSubmit(event: FormEvent<HTMLFormElement>) {
 		event.preventDefault()
-		setIsSubmitting(true)
-		setErrorMessage(null)
 
 		try {
-			await authClient.signUp.email({
+			await signUp.mutateAsync({
 				name: fullName.trim(),
 				email: email.trim(),
 				password,
 			})
 
 			await navigate({ to: "/workspace" })
-		} catch (error) {
-			setErrorMessage(
-				error instanceof Error
-					? error.message
-					: "Unable to create an account with email and password."
-			)
-		} finally {
-			setIsSubmitting(false)
+		} catch {
+			// Error state is surfaced from the mutation.
 		}
 	}
 
+	const errorMessage =
+		signUp.error instanceof Error ? signUp.error.message : null
+
 	return (
 		<div className="relative min-h-screen overflow-hidden bg-[radial-gradient(circle_at_10%_10%,rgba(16,185,129,0.2),transparent_42%),radial-gradient(circle_at_85%_10%,rgba(6,182,212,0.18),transparent_42%),linear-gradient(180deg,#f8fafc_0%,#f0fdfa_52%,#f8fafc_100%)] px-4 py-8 dark:bg-[radial-gradient(circle_at_10%_10%,rgba(16,185,129,0.18),transparent_42%),radial-gradient(circle_at_85%_10%,rgba(6,182,212,0.14),transparent_42%),linear-gradient(180deg,#020617_0%,#0a1528_58%,#111827_100%)] sm:px-6">
-			<div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,rgba(148,163,184,0.08)_1px,transparent_1px),linear-gradient(to_bottom,rgba(148,163,184,0.08)_1px,transparent_1px)] bg-[size:58px_58px] [mask-image:radial-gradient(circle_at_center,black_45%,transparent_95%)]" />
+			<div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,rgba(148,163,184,0.08)_1px,transparent_1px),linear-gradient(to_bottom,rgba(148,163,184,0.08)_1px,transparent_1px)] bg-size-[58px_58px] mask-[radial-gradient(circle_at_center,black_45%,transparent_95%)]" />
 			<div className="relative mx-auto flex w-full max-w-4xl flex-col gap-6">
 				<header className="flex items-center justify-between rounded-3xl border border-white/40 bg-white/65 px-4 py-3 shadow-[0_18px_70px_-48px_rgba(15,23,42,0.55)] backdrop-blur dark:border-white/10 dark:bg-slate-900/55">
 					<a href="/" className="flex items-center gap-2">
-						<div className="flex size-8 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-500 to-cyan-500 text-white">
+						<div className="flex size-8 items-center justify-center rounded-lg bg-linear-to-br from-emerald-500 to-cyan-500 text-white">
 							<IconSparkles className="size-4" />
 						</div>
 						<span className="text-sm font-semibold text-slate-900 dark:text-slate-100">
@@ -157,10 +151,10 @@ function SignUpRoute() {
 
 								<Button
 									type="submit"
-									disabled={isSubmitting}
+									disabled={signUp.isPending}
 									className="h-9 w-full"
 								>
-									{isSubmitting ? "Creating account..." : "Create account"}
+									{signUp.isPending ? "Creating account..." : "Create account"}
 									<IconArrowRight className="size-4" />
 								</Button>
 							</form>

@@ -35,10 +35,7 @@ export default fp(async (fastify) => {
 		recordHttpRequestMetric(baseMetric);
 	});
 
-	fastify.get(
-		"/metrics",
-		{ config: { rateLimit: { max: 300, timeWindow: "1 minute" } } },
-		async (_request, reply) => {
+	fastify.get("/metrics", async (_request, reply) => {
 			reply.header("content-type", registry.contentType);
 			return registry.metrics();
 		},

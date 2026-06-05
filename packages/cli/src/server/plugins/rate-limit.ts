@@ -3,10 +3,15 @@ import fp from "fastify-plugin";
 
 export default fp(async (fastify) => {
 	await fastify.register(rateLimit, {
-		// Apply defaults globally; individual routes can override via route.config.rateLimit
+		// Rate limit /api only; frontend/static/proxy and ops endpoints are exempt.
+		// Individual routes can override via route.config.rateLimit.
 		global: true,
 		max: Number(process.env.RATE_LIMIT_MAX) || 100,
 		timeWindow: process.env.RATE_LIMIT_WINDOW ?? "1 minute",
+		allowList: (request) => {
+			const path = request.url.split("?")[0] ?? "/";
+			return !path.startsWith("/api");
+		},
 		// Use X-Forwarded-For when behind a proxy (trustProxy is set on the server)
 		keyGenerator: (req) => req.ip,
 		errorResponseBuilder: (_req, context) => ({

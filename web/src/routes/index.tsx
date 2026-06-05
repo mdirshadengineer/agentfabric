@@ -90,14 +90,14 @@ const workflowThemes = [
 function RouteComponent() {
 	return (
 		<div className="relative min-h-screen overflow-hidden bg-[radial-gradient(circle_at_12%_8%,rgba(20,184,166,0.24),transparent_38%),radial-gradient(circle_at_85%_10%,rgba(249,115,22,0.18),transparent_35%),linear-gradient(180deg,#f7fafc_0%,#ecfeff_50%,#f8fafc_100%)] px-4 py-6 text-slate-900 dark:bg-[radial-gradient(circle_at_12%_8%,rgba(20,184,166,0.22),transparent_38%),radial-gradient(circle_at_85%_10%,rgba(249,115,22,0.12),transparent_35%),linear-gradient(180deg,#020617_0%,#0b1326_55%,#111827_100%)] dark:text-slate-50 sm:px-6 lg:px-10">
-			<div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,rgba(148,163,184,0.08)_1px,transparent_1px),linear-gradient(to_bottom,rgba(148,163,184,0.08)_1px,transparent_1px)] bg-[size:56px_56px] [mask-image:radial-gradient(circle_at_center,black_42%,transparent_95%)] dark:bg-[linear-gradient(to_right,rgba(148,163,184,0.1)_1px,transparent_1px),linear-gradient(to_bottom,rgba(148,163,184,0.1)_1px,transparent_1px)]" />
+			<div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,rgba(148,163,184,0.08)_1px,transparent_1px),linear-gradient(to_bottom,rgba(148,163,184,0.08)_1px,transparent_1px)] bg-size-[56px_56px] mask-[radial-gradient(circle_at_center,black_42%,transparent_95%)] dark:bg-[linear-gradient(to_right,rgba(148,163,184,0.1)_1px,transparent_1px),linear-gradient(to_bottom,rgba(148,163,184,0.1)_1px,transparent_1px)]" />
 			<div className="pointer-events-none absolute -left-20 top-30 h-72 w-72 rounded-full bg-emerald-300/25 blur-3xl" />
 			<div className="pointer-events-none absolute -right-24 top-16 h-80 w-80 rounded-full bg-orange-300/20 blur-3xl" />
 			<div className="pointer-events-none absolute inset-x-0 top-80 h-80 bg-[radial-gradient(circle_at_center,rgba(20,184,166,0.12),transparent_68%)]" />
 			<div className="mx-auto flex w-full max-w-7xl flex-col gap-8">
 				<header className="animate-in fade-in slide-in-from-top-3 sticky top-3 z-10 flex items-center justify-between rounded-3xl border border-white/45 bg-white/60 px-4 py-3 shadow-[0_20px_80px_-45px_rgba(15,23,42,0.45)] backdrop-blur md:px-5 dark:border-white/10 dark:bg-slate-900/55">
 					<div className="flex items-center gap-3">
-						<div className="flex size-9 items-center justify-center rounded-xl bg-gradient-to-br from-teal-500 to-cyan-500 text-white shadow-lg shadow-cyan-600/30">
+						<div className="flex size-9 items-center justify-center rounded-xl bg-linear-to-br from-teal-500 to-cyan-500 text-white shadow-lg shadow-cyan-600/30">
 							<IconSparkles className="size-4" />
 						</div>
 						<div>
@@ -132,7 +132,7 @@ function RouteComponent() {
 
 				<section className="relative overflow-hidden rounded-[2rem] border border-white/30 bg-slate-950 px-6 py-10 text-white shadow-[0_35px_120px_-45px_rgba(15,23,42,0.85)] sm:px-8 lg:px-10">
 					<div className="absolute inset-0 bg-[linear-gradient(125deg,rgba(20,184,166,0.28),transparent_40%,rgba(249,115,22,0.2)_75%,transparent)]" />
-					<div className="absolute -right-20 top-8 h-48 w-48 rounded-full border border-white/15 bg-white/5 [animation:spin_18s_linear_infinite]" />
+					<div className="absolute -right-20 top-8 h-48 w-48 rounded-full border border-white/15 bg-white/5 animate-[spin_18s_linear_infinite]" />
 					<div className="absolute bottom-0 left-12 h-56 w-56 rounded-full bg-teal-400/10 blur-3xl" />
 					<div className="relative grid gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-end">
 						<div className="animate-in fade-in slide-in-from-bottom-4 space-y-5 duration-700">
@@ -239,10 +239,10 @@ function RouteComponent() {
 					{featurePillars.map((pillar) => (
 						<Card
 							key={pillar.title}
-							className="group border-white/20 bg-gradient-to-b from-white/85 to-white/62 py-0 shadow-[0_22px_80px_-44px_rgba(15,23,42,0.55)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_30px_100px_-42px_rgba(15,23,42,0.55)] dark:bg-[linear-gradient(180deg,rgba(15,23,42,0.78),rgba(15,23,42,0.58))]"
+							className="group border-white/20 bg-linear-to-b from-white/85 to-white/62 py-0 shadow-[0_22px_80px_-44px_rgba(15,23,42,0.55)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_30px_100px_-42px_rgba(15,23,42,0.55)] dark:bg-[linear-gradient(180deg,rgba(15,23,42,0.78),rgba(15,23,42,0.58))]"
 						>
 							<CardHeader className="pt-4">
-								<div className="mb-2 inline-flex size-10 items-center justify-center rounded-xl bg-gradient-to-br from-teal-500/15 to-orange-400/20 text-teal-700 dark:text-teal-200">
+								<div className="mb-2 inline-flex size-10 items-center justify-center rounded-xl bg-linear-to-br from-teal-500/15 to-orange-400/20 text-teal-700 dark:text-teal-200">
 									<pillar.icon className="size-5" />
 								</div>
 								<CardTitle className="text-lg text-slate-900 dark:text-slate-50">
@@ -326,7 +326,7 @@ function RouteComponent() {
 					</Card>
 
 					<div className="grid gap-4">
-						<Card className="border-white/20 bg-gradient-to-r from-cyan-500/85 to-teal-500/85 py-0 text-white dark:from-cyan-600/75 dark:to-teal-600/75">
+						<Card className="border-white/20 bg-linear-to-r from-cyan-500/85 to-teal-500/85 py-0 text-white dark:from-cyan-600/75 dark:to-teal-600/75">
 							<CardHeader className="pt-4">
 								<CardTitle className="flex items-center gap-2 text-white">
 									<IconSparkles className="size-4" />
@@ -379,7 +379,7 @@ function RouteComponent() {
 					</div>
 				</section>
 
-				<section className="relative overflow-hidden rounded-[2rem] border border-white/30 bg-gradient-to-r from-teal-500 to-cyan-600 px-6 py-8 text-white shadow-[0_35px_120px_-55px_rgba(8,145,178,0.9)] sm:px-8">
+				<section className="relative overflow-hidden rounded-[2rem] border border-white/30 bg-linear-to-r from-teal-500 to-cyan-600 px-6 py-8 text-white shadow-[0_35px_120px_-55px_rgba(8,145,178,0.9)] sm:px-8">
 					<div className="absolute -right-8 -top-10 h-44 w-44 rounded-full border border-white/30 bg-white/10" />
 					<div className="absolute -left-8 bottom-0 h-28 w-28 rounded-full bg-white/20 blur-2xl" />
 					<div className="relative flex flex-col gap-4 md:flex-row md:items-center md:justify-between">

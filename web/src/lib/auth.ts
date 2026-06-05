@@ -3,11 +3,10 @@ import { createAuthClient } from "better-auth/client"
 import { adminClient } from "better-auth/client/plugins"
 import { createAuthFetch } from "./auth-fetch-interceptor"
 import { clearDeviceId } from "./device-manager"
+import { apiBaseURL } from "./env"
 
-const baseURL = "http://localhost:5678"
-
-// TODO: Move the baseURL and basePath to an environment variable
-export const authBaseURL = baseURL
+export const authBaseURL = apiBaseURL
+const baseURL = apiBaseURL
 
 export const authClient = createAuthClient({
 	baseURL,

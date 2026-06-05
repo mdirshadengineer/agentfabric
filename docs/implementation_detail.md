@@ -210,15 +210,20 @@ The auth plugin decorates Fastify with the Better Auth instance.
 
 ### Rate Limit Plugin
 
-Global rate limiting is enabled with `@fastify/rate-limit`.
+Rate limiting is enabled with `@fastify/rate-limit` for `/api` routes only.
 
-Defaults:
+Scoped paths:
+
+- `/api/*` — rate limited (default and per-route overrides).
+- All other paths — exempt (`/health`, `/metrics`, SPA assets, static files, Vite dev proxy).
+
+Defaults for `/api` routes:
 
 - `RATE_LIMIT_MAX` or `100`.
 - `RATE_LIMIT_WINDOW` or `1 minute`.
 - Keyed by request IP.
 
-Routes can override rate limits through route config.
+Non-API traffic is excluded via an `allowList` path filter. Routes under `/api` can override limits through route config.
 
 ### Logging Plugin
 
@@ -244,7 +249,7 @@ Implemented metrics:
 - `agentfabric_http_request_duration_seconds`.
 - `agentfabric_log_entries_total`.
 
-The `/metrics` endpoint returns Prometheus-formatted metrics and has its own rate limit.
+The `/metrics` endpoint returns Prometheus-formatted metrics.
 
 ### Authentication Hooks
 
@@ -451,7 +456,47 @@ The root provider composition includes:
 - TanStack Router provider.
 - TanStack Devtools provider.
 
+The TanStack Query provider and TanStack Router share a single `QueryClient` instance from `web/src/lib/api/query-client.ts`, so route `beforeLoad` preloads and component hooks read from the same cache.
+
 In development or test mode, the app also initializes `react-scan` and imports `react-grab`.
+
+### Data Fetching with TanStack Query
+
+TanStack Query v5 is the standard data-fetching layer for the web app. Queries and mutations are organized by feature under `web/src/features/*/queries/`, with shared infrastructure under `web/src/lib/api/`.
+
+#### Shared infrastructure
+
+| File | Purpose |
+|------|---------|
+| `web/src/lib/env.ts` | `apiBaseURL` from `VITE_API_BASE_URL` (fallback `http://localhost:5678`) |
+| `web/src/lib/api/query-client.ts` | Shared `QueryClient` with defaults (`staleTime: 30s`, query `retry: 1`, mutation `retry: 0`) |
+| `web/src/lib/api/query-keys.ts` | Hierarchical query key factory for cache invalidation |
+| `web/src/lib/api/management-client.ts` | Cookie-session `fetch` helper for `/api/v1/management` |
+| `web/src/lib/api/types.ts` | Shared response types (`MeResponse`, `RoleDefinition`, `UserRecord`, `WorkspaceSummary`) |
+
+#### Query modules
+
+| Module | Exports | Data source |
+|--------|---------|-------------|
+| `features/auth/queries/session.ts` | `sessionQueryOptions`, `useSession`, `fetchSession` | Better Auth `authClient.getSession()` |
+| `features/auth/queries/mutations.ts` | `useSignIn`, `useSignUp`, `useSignOut` | Better Auth sign-in, sign-up, and sign-out |
+| `features/management/queries/me.ts` | `meQueryOptions`, `useMe`, `fetchMe` | `GET /api/v1/management/me` |
+| `features/workspace/queries/workspaces.ts` | `workspacesQueryOptions`, `useWorkspaces` | Temporary mock list (no backend endpoint yet) |
+
+#### Cache keys
+
+- `["auth", "session"]` — current Better Auth session.
+- `["management", "me"]` — authenticated user, session, and impersonation flag from the management API.
+- `["workspaces", "list"]` — workspace list (mock until a real endpoint exists).
+
+#### Router integration
+
+- `/_auth` `beforeLoad` calls `ensureQueryData(sessionQueryOptions)` and redirects unauthenticated users to `/signin` with a `redirect` search param.
+- `/_auth/workspace` `beforeLoad` preloads `meQueryOptions` and `workspacesQueryOptions` in parallel to avoid render waterfalls in the workspace shell.
+
+Auth mutations invalidate `auth.session` and `management.me` on success. `useSignOut` removes both caches on success.
+
+Test routes such as `test-impersonate-user` import `requestManagement` from the shared management client instead of defining their own fetch helper.
 
 ### Routing
 
@@ -460,8 +505,8 @@ Implemented route areas:
 - `/`: public landing page.
 - `/signin`: email/password sign-in page.
 - `/signup`: email/password sign-up page.
-- `/_auth`: authenticated route layout shell.
-- `/_auth/workspace`: workspace layout shell.
+- `/_auth`: authenticated route layout shell with session guard (`beforeLoad`).
+- `/_auth/workspace`: workspace layout shell with `me` and workspace list preloaded.
 - `/_auth/workspace/`: placeholder workspace index.
 - `/_auth/workspace/$workspaceId/`: placeholder workspace detail route.
 
@@ -487,17 +532,17 @@ The content describes the intended product direction: AI automation workflows, s
 The sign-in page:
 
 - Accepts email and password.
-- Calls `authClient.signIn.email`.
-- Navigates to `/workspace` after success.
-- Shows error messages.
+- Submits via the `useSignIn` TanStack Query mutation (wraps `authClient.signIn.email`).
+- Invalidates session and management caches on success, then navigates to `/workspace`.
+- Surfaces mutation errors in the UI (`isPending`, `error`).
 - Includes disabled Google and GitHub OAuth buttons for future integration.
 
 The sign-up page:
 
 - Accepts full name, email, and password.
-- Calls `authClient.signUp.email`.
-- Navigates to `/workspace` after success.
-- Shows error messages.
+- Submits via the `useSignUp` TanStack Query mutation (wraps `authClient.signUp.email`).
+- Invalidates session and management caches on success, then navigates to `/workspace`.
+- Surfaces mutation errors in the UI (`isPending`, `error`).
 - Includes disabled Google and GitHub OAuth buttons for future integration.
 
 ### Auth Client
@@ -505,13 +550,12 @@ The sign-up page:
 The web auth client:
 
 - Uses Better Auth client.
-- Points at `http://localhost:5678`.
+- Points at `apiBaseURL` from `web/src/lib/env.ts` (overridable via `VITE_API_BASE_URL`, default `http://localhost:5678`).
 - Uses base path `/api/v1/auth`.
 - Enables admin and API key client plugins.
 - Uses a custom fetch implementation that injects `x-device-id` into auth requests.
 - Exposes a `signOut` helper that signs out and clears the stored device id.
-
-The auth base URL is currently hardcoded with a TODO to move it to environment configuration.
+- Exports `authBaseURL` as an alias of `apiBaseURL` for routes and test pages that build absolute API URLs.
 
 ### Device ID Management
 
@@ -552,6 +596,10 @@ Default analytics IDs exist in code but can be overridden with:
 - `VITE_GA_MEASUREMENT_ID`
 - `VITE_CLARITY_PROJECT_ID`
 
+Web API configuration:
+
+- `VITE_API_BASE_URL` — backend origin for auth and management requests (default `http://localhost:5678`).
+
 ### Workspace Area
 
 The workspace shell is present but not fully implemented.
@@ -563,7 +611,10 @@ Implemented pieces:
 - `ResizablePanelGroup` around workspace children.
 - Placeholder workspace index route.
 - Placeholder workspace id route.
-- `useWorkspaceList` returns two hardcoded sample workspaces.
+- `useWorkspaces` TanStack Query hook backed by a temporary mock `queryFn` (two sample workspaces).
+- `useWorkspaceList` thin wrapper over `useWorkspaces` that returns the workspace array.
+- `useSelectedWorkspace` reads `workspaceId` from route params only (no server-side validation yet).
+- `useMe` available for workspace shell profile and impersonation context once header UI is wired.
 
 ## UI Component System
 
@@ -618,9 +669,10 @@ The following areas are not fully implemented yet:
 - No actual agent workflow engine is present beyond the runtime service container.
 - Scheduler and worker services are mentioned as future runtime services but are not implemented.
 - Workspace UI is mostly a shell with placeholder routes.
-- Workspace data is hardcoded in `useWorkspaceList`.
+- No backend workspace list or detail API exists; `useWorkspaces` still uses a mock `queryFn`.
+- Workspace shell header profile, sidebar, and workspace switcher are not wired to query data yet.
+- Admin management queries (`roles`, `users`, bootstrap-admin) are only used in test routes, not production UI.
 - OAuth buttons are present but disabled.
-- The web auth base URL is hardcoded to `http://localhost:5678`.
 - The root README does not yet describe setup, development, environment variables, or architecture.
 - There are root test scripts, but no test files were found in the scanned source tree.
 
@@ -632,12 +684,15 @@ Typical local runtime flow:
 2. CLI command discovery resolves the `start` command.
 3. The runtime starts the Fastify API server.
 4. In development, Fastify proxies non-API routes to Vite.
-5. The React app calls Better Auth endpoints under `/api/v1/auth`.
-6. The auth fetch interceptor injects `x-device-id`.
-7. The backend proxies auth requests to Better Auth.
-8. Session governance enforces or prunes sessions.
-9. Auth, API key, management, table, logging, and metrics data are persisted in Postgres.
+5. The React app loads with a shared TanStack Query cache and TanStack Router context.
+6. Visiting a protected route triggers `beforeLoad` session preload; unauthenticated users are redirected to `/signin`.
+7. The React app calls Better Auth endpoints under `/api/v1/auth` (session queries and auth mutations).
+8. The auth fetch interceptor injects `x-device-id`.
+9. Authenticated workspace routes preload `GET /api/v1/management/me` and the workspace list query.
+10. The backend proxies auth requests to Better Auth.
+11. Session governance enforces or prunes sessions.
+12. Auth, API key, management, table, logging, and metrics data are persisted in Postgres.
 
 ## Summary
 
-AgentFabric currently implements a strong foundation for a unified CLI, API server, authentication layer, session governance system, API key access, operational logging, metrics, database schema, and React web shell. The codebase is ready for the next layer of product implementation: real workspace data, agent/workflow orchestration, OAuth providers, richer admin screens, and production-ready documentation.
+AgentFabric currently implements a strong foundation for a unified CLI, API server, authentication layer, session governance system, API key access, operational logging, metrics, database schema, and React web shell with TanStack Query–based data fetching, route-level auth guards, and management API preloading. The codebase is ready for the next layer of product implementation: real workspace APIs and UI wiring, agent/workflow orchestration, OAuth providers, richer admin screens, and production-ready documentation.

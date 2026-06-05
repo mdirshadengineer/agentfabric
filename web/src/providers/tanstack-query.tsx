@@ -1,7 +1,6 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
+import { QueryClientProvider } from "@tanstack/react-query"
 import {} from "@tanstack/react-query-devtools"
-
-const queryClient = new QueryClient()
+import { queryClient } from "@/lib/api/query-client"
 
 export function TanStackQueryProvider({
 	children,

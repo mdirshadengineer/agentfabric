@@ -84,11 +84,7 @@ function createAPIServer() {
 	});
 
 	// ─── Health check ───────────────────────────────────────────────────────────
-	app.get(
-		"/health",
-		{ config: { rateLimit: { max: 60, timeWindow: "1 minute" } } },
-		async () => ({ status: "ok", uptime: process.uptime() }),
-	);
+	app.get("/health", async () => ({ status: "ok", uptime: process.uptime() }));
 
 	// ─── Frontend handling ──────────────────────────────────────────────────────
 	if (isDev) {

@@ -19,29 +19,13 @@ import {
 } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
+import { requestManagement } from "@/lib/api/management-client"
+import type { RoleDefinition, UserRecord } from "@/lib/api/types"
 import { authBaseURL, authClient, signOut } from "@/lib/auth"
 
 export const Route = createFileRoute("/test-impersonate-user")({
 	component: RouteComponent,
 })
-
-type RoleDefinition = {
-	id: string
-	name: string
-	description: string | null
-	permissions: string[]
-	createdAt: string
-	updatedAt: string
-}
-
-type UserRecord = {
-	id: string
-	name: string
-	email: string
-	role: string | null
-	createdAt: string
-	updatedAt: string
-}
 
 type RequestState =
 	| "idle"
@@ -71,35 +55,6 @@ function formatTimestamp(value: string | null | undefined): string {
 
 	const date = new Date(value)
 	return Number.isNaN(date.getTime()) ? value : date.toLocaleString()
-}
-
-async function requestManagement<T>(
-	path: string,
-	init: RequestInit = {}
-): Promise<T> {
-	const response = await fetch(`${authBaseURL}/api/v1/management${path}`, {
-		credentials: "include",
-		headers: {
-			"content-type": "application/json",
-			...(init.headers ?? {}),
-		},
-		...init,
-	})
-
-	const payload = (await response.json().catch(() => ({}))) as {
-		message?: string
-		code?: string
-	}
-
-	if (!response.ok) {
-		throw new Error(
-			payload.message ||
-				payload.code ||
-				`Request failed with ${response.status}`
-		)
-	}
-
-	return payload as T
 }
 
 function RouteComponent() {
