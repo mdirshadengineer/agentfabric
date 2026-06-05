@@ -1,3 +1,4 @@
+import "dotenv/config";
 import { createAPIServer } from "../server/api-server.js";
 
 async function main() {
