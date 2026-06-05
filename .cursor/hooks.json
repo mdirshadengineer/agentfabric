@@ -1,0 +1,6 @@
+{
+  "version": 1,
+  "hooks": {
+    "afterFileEdit": [{ "command": ".cursor/hooks/format.sh" }, { "command": ".cursor/hooks/lint.sh" }]
+  }
+}

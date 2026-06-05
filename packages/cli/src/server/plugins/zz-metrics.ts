@@ -36,8 +36,7 @@ export default fp(async (fastify) => {
 	});
 
 	fastify.get("/metrics", async (_request, reply) => {
-			reply.header("content-type", registry.contentType);
-			return registry.metrics();
-		},
-	);
+		reply.header("content-type", registry.contentType);
+		return registry.metrics();
+	});
 });
