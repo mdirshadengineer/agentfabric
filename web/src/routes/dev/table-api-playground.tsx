@@ -43,7 +43,7 @@ import { getDeviceId } from "@/lib/device-manager"
 import { apiBaseURL, getBrowserApiBaseUrl } from "@/lib/env"
 import { cn } from "@/lib/utils"
 
-export const Route = createFileRoute("/dev/table-apikey-integration")({
+export const Route = createFileRoute("/dev/table-api-playground")({
 	component: RouteComponent,
 })
 

@@ -52,7 +52,7 @@ import {
 import { getDeviceId } from "@/lib/device-manager"
 import { cn } from "@/lib/utils"
 
-export const Route = createFileRoute("/dev/impersonate-user")({
+export const Route = createFileRoute("/dev/admin-playground")({
 	component: RouteComponent,
 })
 

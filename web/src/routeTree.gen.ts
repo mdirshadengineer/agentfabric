@@ -14,11 +14,11 @@ import { Route as SigninRouteImport } from './routes/signin'
 import { Route as DevRouteImport } from './routes/dev'
 import { Route as AuthRouteImport } from './routes/_auth'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as DevTableApikeyIntegrationRouteImport } from './routes/dev/table-apikey-integration'
-import { Route as DevImpersonateUserRouteImport } from './routes/dev/impersonate-user'
+import { Route as DevTableApiPlaygroundRouteImport } from './routes/dev/table-api-playground'
 import { Route as DevApiPlaygroundRouteImport } from './routes/dev/api-playground'
 import { Route as DevAnalyticsRouteImport } from './routes/dev/analytics'
 import { Route as DevAlertBannerRouteImport } from './routes/dev/alert-banner'
+import { Route as DevAdminPlaygroundRouteImport } from './routes/dev/admin-playground'
 import { Route as AuthWorkspaceRouteRouteImport } from './routes/_auth/workspace/route'
 import { Route as AuthWorkspaceIndexRouteImport } from './routes/_auth/workspace/index'
 import { Route as AuthWorkspaceWorkspaceIdIndexRouteImport } from './routes/_auth/workspace/$workspaceId.index'
@@ -47,15 +47,9 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const DevTableApikeyIntegrationRoute =
-  DevTableApikeyIntegrationRouteImport.update({
-    id: '/table-apikey-integration',
-    path: '/table-apikey-integration',
-    getParentRoute: () => DevRoute,
-  } as any)
-const DevImpersonateUserRoute = DevImpersonateUserRouteImport.update({
-  id: '/impersonate-user',
-  path: '/impersonate-user',
+const DevTableApiPlaygroundRoute = DevTableApiPlaygroundRouteImport.update({
+  id: '/table-api-playground',
+  path: '/table-api-playground',
   getParentRoute: () => DevRoute,
 } as any)
 const DevApiPlaygroundRoute = DevApiPlaygroundRouteImport.update({
@@ -71,6 +65,11 @@ const DevAnalyticsRoute = DevAnalyticsRouteImport.update({
 const DevAlertBannerRoute = DevAlertBannerRouteImport.update({
   id: '/alert-banner',
   path: '/alert-banner',
+  getParentRoute: () => DevRoute,
+} as any)
+const DevAdminPlaygroundRoute = DevAdminPlaygroundRouteImport.update({
+  id: '/admin-playground',
+  path: '/admin-playground',
   getParentRoute: () => DevRoute,
 } as any)
 const AuthWorkspaceRouteRoute = AuthWorkspaceRouteRouteImport.update({
@@ -96,11 +95,11 @@ export interface FileRoutesByFullPath {
   '/signin': typeof SigninRoute
   '/signup': typeof SignupRoute
   '/workspace': typeof AuthWorkspaceRouteRouteWithChildren
+  '/dev/admin-playground': typeof DevAdminPlaygroundRoute
   '/dev/alert-banner': typeof DevAlertBannerRoute
   '/dev/analytics': typeof DevAnalyticsRoute
   '/dev/api-playground': typeof DevApiPlaygroundRoute
-  '/dev/impersonate-user': typeof DevImpersonateUserRoute
-  '/dev/table-apikey-integration': typeof DevTableApikeyIntegrationRoute
+  '/dev/table-api-playground': typeof DevTableApiPlaygroundRoute
   '/workspace/': typeof AuthWorkspaceIndexRoute
   '/workspace/$workspaceId/': typeof AuthWorkspaceWorkspaceIdIndexRoute
 }
@@ -109,11 +108,11 @@ export interface FileRoutesByTo {
   '/dev': typeof DevRouteWithChildren
   '/signin': typeof SigninRoute
   '/signup': typeof SignupRoute
+  '/dev/admin-playground': typeof DevAdminPlaygroundRoute
   '/dev/alert-banner': typeof DevAlertBannerRoute
   '/dev/analytics': typeof DevAnalyticsRoute
   '/dev/api-playground': typeof DevApiPlaygroundRoute
-  '/dev/impersonate-user': typeof DevImpersonateUserRoute
-  '/dev/table-apikey-integration': typeof DevTableApikeyIntegrationRoute
+  '/dev/table-api-playground': typeof DevTableApiPlaygroundRoute
   '/workspace': typeof AuthWorkspaceIndexRoute
   '/workspace/$workspaceId': typeof AuthWorkspaceWorkspaceIdIndexRoute
 }
@@ -125,11 +124,11 @@ export interface FileRoutesById {
   '/signin': typeof SigninRoute
   '/signup': typeof SignupRoute
   '/_auth/workspace': typeof AuthWorkspaceRouteRouteWithChildren
+  '/dev/admin-playground': typeof DevAdminPlaygroundRoute
   '/dev/alert-banner': typeof DevAlertBannerRoute
   '/dev/analytics': typeof DevAnalyticsRoute
   '/dev/api-playground': typeof DevApiPlaygroundRoute
-  '/dev/impersonate-user': typeof DevImpersonateUserRoute
-  '/dev/table-apikey-integration': typeof DevTableApikeyIntegrationRoute
+  '/dev/table-api-playground': typeof DevTableApiPlaygroundRoute
   '/_auth/workspace/': typeof AuthWorkspaceIndexRoute
   '/_auth/workspace/$workspaceId/': typeof AuthWorkspaceWorkspaceIdIndexRoute
 }
@@ -141,11 +140,11 @@ export interface FileRouteTypes {
     | '/signin'
     | '/signup'
     | '/workspace'
+    | '/dev/admin-playground'
     | '/dev/alert-banner'
     | '/dev/analytics'
     | '/dev/api-playground'
-    | '/dev/impersonate-user'
-    | '/dev/table-apikey-integration'
+    | '/dev/table-api-playground'
     | '/workspace/'
     | '/workspace/$workspaceId/'
   fileRoutesByTo: FileRoutesByTo
@@ -154,11 +153,11 @@ export interface FileRouteTypes {
     | '/dev'
     | '/signin'
     | '/signup'
+    | '/dev/admin-playground'
     | '/dev/alert-banner'
     | '/dev/analytics'
     | '/dev/api-playground'
-    | '/dev/impersonate-user'
-    | '/dev/table-apikey-integration'
+    | '/dev/table-api-playground'
     | '/workspace'
     | '/workspace/$workspaceId'
   id:
@@ -169,11 +168,11 @@ export interface FileRouteTypes {
     | '/signin'
     | '/signup'
     | '/_auth/workspace'
+    | '/dev/admin-playground'
     | '/dev/alert-banner'
     | '/dev/analytics'
     | '/dev/api-playground'
-    | '/dev/impersonate-user'
-    | '/dev/table-apikey-integration'
+    | '/dev/table-api-playground'
     | '/_auth/workspace/'
     | '/_auth/workspace/$workspaceId/'
   fileRoutesById: FileRoutesById
@@ -223,18 +222,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/dev/table-apikey-integration': {
-      id: '/dev/table-apikey-integration'
-      path: '/table-apikey-integration'
-      fullPath: '/dev/table-apikey-integration'
-      preLoaderRoute: typeof DevTableApikeyIntegrationRouteImport
-      parentRoute: typeof DevRoute
-    }
-    '/dev/impersonate-user': {
-      id: '/dev/impersonate-user'
-      path: '/impersonate-user'
-      fullPath: '/dev/impersonate-user'
-      preLoaderRoute: typeof DevImpersonateUserRouteImport
+    '/dev/table-api-playground': {
+      id: '/dev/table-api-playground'
+      path: '/table-api-playground'
+      fullPath: '/dev/table-api-playground'
+      preLoaderRoute: typeof DevTableApiPlaygroundRouteImport
       parentRoute: typeof DevRoute
     }
     '/dev/api-playground': {
@@ -256,6 +248,13 @@ declare module '@tanstack/react-router' {
       path: '/alert-banner'
       fullPath: '/dev/alert-banner'
       preLoaderRoute: typeof DevAlertBannerRouteImport
+      parentRoute: typeof DevRoute
+    }
+    '/dev/admin-playground': {
+      id: '/dev/admin-playground'
+      path: '/admin-playground'
+      fullPath: '/dev/admin-playground'
+      preLoaderRoute: typeof DevAdminPlaygroundRouteImport
       parentRoute: typeof DevRoute
     }
     '/_auth/workspace': {
@@ -306,19 +305,19 @@ const AuthRouteChildren: AuthRouteChildren = {
 const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
 
 interface DevRouteChildren {
+  DevAdminPlaygroundRoute: typeof DevAdminPlaygroundRoute
   DevAlertBannerRoute: typeof DevAlertBannerRoute
   DevAnalyticsRoute: typeof DevAnalyticsRoute
   DevApiPlaygroundRoute: typeof DevApiPlaygroundRoute
-  DevImpersonateUserRoute: typeof DevImpersonateUserRoute
-  DevTableApikeyIntegrationRoute: typeof DevTableApikeyIntegrationRoute
+  DevTableApiPlaygroundRoute: typeof DevTableApiPlaygroundRoute
 }
 
 const DevRouteChildren: DevRouteChildren = {
+  DevAdminPlaygroundRoute: DevAdminPlaygroundRoute,
   DevAlertBannerRoute: DevAlertBannerRoute,
   DevAnalyticsRoute: DevAnalyticsRoute,
   DevApiPlaygroundRoute: DevApiPlaygroundRoute,
-  DevImpersonateUserRoute: DevImpersonateUserRoute,
-  DevTableApikeyIntegrationRoute: DevTableApikeyIntegrationRoute,
+  DevTableApiPlaygroundRoute: DevTableApiPlaygroundRoute,
 }
 
 const DevRouteWithChildren = DevRoute._addFileChildren(DevRouteChildren)
