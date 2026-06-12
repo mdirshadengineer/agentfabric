@@ -10,7 +10,7 @@ import {
 } from "@/components/alert-banner-stack/alert-banner-stack-provider"
 import { Button } from "@/components/ui/button"
 
-export const Route = createFileRoute("/test-alert-banner")({
+export const Route = createFileRoute("/dev/alert-banner")({
 	component: RouteComponent,
 })
 

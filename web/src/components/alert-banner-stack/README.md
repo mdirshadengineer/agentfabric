@@ -203,7 +203,7 @@ Use preset wrappers when you want sensible defaults with override points:
 
 ## Test Route Example
 
-Route [web/src/routes/test-alert-banner.tsx](web/src/routes/test-alert-banner.tsx) demonstrates:
+Route [web/src/routes/dev/alert-banner.tsx](web/src/routes/dev/alert-banner.tsx) demonstrates:
 
 - Provider setup with `localStorage` persistence
 - Warning banner with persisted dismissal

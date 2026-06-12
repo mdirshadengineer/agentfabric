@@ -22,12 +22,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { authBaseURL, authClient, signOut } from "@/lib/auth"
 import { getDeviceId } from "@/lib/device-manager"
 
-// This file defines the main route of the application, which provides an interface
-// to interact with the Fastify server's authentication system, including session
-// management and API key creation/verification. It uses React state to manage form
-// inputs and displays results in a user-friendly way. The UI components are styled
-// with Tailwind CSS and custom components from the project's design system.
-export const Route = createFileRoute("/test-api-playground")({
+export const Route = createFileRoute("/dev/api-playground")({
 	component: RouteComponent,
 })
 

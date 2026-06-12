@@ -23,7 +23,7 @@ import {
 	applyStoredConsent,
 } from "@/lib/consent-analytics"
 
-export const Route = createFileRoute("/test-analytics")({
+export const Route = createFileRoute("/dev/analytics")({
 	component: RouteComponent,
 })
 

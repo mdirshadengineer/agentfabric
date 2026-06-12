@@ -21,7 +21,7 @@ import { requestManagement } from "@/lib/api/management-client"
 import type { UserRecord } from "@/lib/api/types"
 import { authBaseURL, authClient, signOut } from "@/lib/auth"
 
-export const Route = createFileRoute("/test-impersonate-user")({
+export const Route = createFileRoute("/dev/impersonate-user")({
 	component: RouteComponent,
 })
 

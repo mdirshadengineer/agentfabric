@@ -19,7 +19,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { authBaseURL } from "@/lib/auth"
 
-export const Route = createFileRoute("/test-table-apikey-integration")({
+export const Route = createFileRoute("/dev/table-apikey-integration")({
 	component: RouteComponent,
 })
 
