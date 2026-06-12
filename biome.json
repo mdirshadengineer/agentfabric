@@ -22,7 +22,8 @@
       "!**/.git",
       "!**/.svn",
       "!**/.hg",
-      "!**/.DS_Store"
+      "!**/.DS_Store",
+			"!**/migrations"
 		]
 	},
 	"assist": {

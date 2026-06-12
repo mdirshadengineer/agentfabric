@@ -1,7 +1,7 @@
 {
 	"name": "agentfabric-web",
 	"private": true,
-	"description": "AgentFabric - Automate. Innovate. Collaborate.",
+	"description": "AgentFabric - A framework for building, deploying, and managing AI agents.",
 	"version": "0.0.2",
 	"type": "module",
 	"scripts": {

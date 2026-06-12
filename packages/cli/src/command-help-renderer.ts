@@ -3,7 +3,9 @@ import type { CommandDefinition, CommandMetadata } from "./command-metadata.js";
 export function printGlobalHelp(
 	definitions: readonly CommandDefinition[],
 ): void {
-	console.log("AgentFabric CLI - Automate. Innovate. Collaborate.");
+	console.log(
+		"AgentFabric CLI - A framework for building, deploying, and managing AI agents.",
+	);
 	console.log("");
 	console.log("A powerful CLI tool to manage your AgentFabric projects.");
 	console.log("");

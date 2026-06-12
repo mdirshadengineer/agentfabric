@@ -58,7 +58,7 @@ const config = {
 				},
 			},
 		]),
-	]
+	],
 } satisfies BetterAuthOptions;
 
 export const auth = betterAuth(config);
