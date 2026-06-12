@@ -3,6 +3,7 @@ import {
 	IconCookie,
 	IconExternalLink,
 	IconShieldCheck,
+	IconX,
 } from "@tabler/icons-react"
 import * as React from "react"
 
@@ -135,6 +136,15 @@ function createConsentId() {
 	return `consent-${Date.now()}`
 }
 
+export const COOKIE_SETTINGS_OPEN_EVENT = "agentfabric:open-cookie-settings"
+export const COOKIE_CONSENT_CHANGED_EVENT = "agentfabric:cookie-consent-changed"
+
+export function openCookieSettings() {
+	window.dispatchEvent(new CustomEvent(COOKIE_SETTINGS_OPEN_EVENT))
+}
+
+type CookiePopupPresentation = "banner" | "modal"
+
 interface CookiePopupProps {
 	storageKey?: string
 	policyVersion?: string
@@ -144,6 +154,7 @@ interface CookiePopupProps {
 	className?: string
 	manageButtonLabel?: string
 	showManageButton?: boolean
+	presentation?: CookiePopupPresentation
 }
 
 export function CookiePopup({
@@ -155,6 +166,7 @@ export function CookiePopup({
 	className,
 	manageButtonLabel = "Privacy settings",
 	showManageButton = true,
+	presentation = "banner",
 }: CookiePopupProps) {
 	const [isOpen, setIsOpen] = React.useState(false)
 	const [isReady, setIsReady] = React.useState(false)
@@ -218,6 +230,13 @@ export function CookiePopup({
 		emitMetric("popup_viewed")
 	}, [emitMetric, isOpen])
 
+	React.useEffect(() => {
+		const openSettings = () => setIsOpen(true)
+		window.addEventListener(COOKIE_SETTINGS_OPEN_EVENT, openSettings)
+		return () =>
+			window.removeEventListener(COOKIE_SETTINGS_OPEN_EVENT, openSettings)
+	}, [])
+
 	const saveConsent = React.useCallback(
 		(action: ConsentAction, nextPreferences: CookiePreferences) => {
 			const nextConsentId = hasStoredConsent ? consentId : createConsentId()
@@ -238,6 +257,9 @@ export function CookiePopup({
 			setHasStoredConsent(true)
 			setIsOpen(false)
 			onConsentChange?.(record)
+			window.dispatchEvent(
+				new CustomEvent(COOKIE_CONSENT_CHANGED_EVENT, { detail: record })
+			)
 			emitMetric("consent_saved", {
 				action,
 				functional: nextPreferences.functional,
@@ -281,232 +303,248 @@ export function CookiePopup({
 		setDetailsOpen(false)
 		setIsOpen(true)
 		emitMetric("consent_withdrawn")
+		window.dispatchEvent(new CustomEvent(COOKIE_CONSENT_CHANGED_EVENT))
 	}
+
+	const closePopup = () => setIsOpen(false)
+	const isModal = presentation === "modal"
 
 	if (!isReady) {
 		return null
 	}
 
+	const popupCard = (
+		<Card
+			className={cn(
+				"w-full border border-border/70 bg-card/98 backdrop-blur shadow-2xl",
+				isModal && "max-h-[min(90vh,48rem)] overflow-y-auto",
+				className
+			)}
+		>
+			<CardHeader className="space-y-3">
+				<div className="flex items-start justify-between gap-3">
+					<div className="space-y-2">
+						<Badge variant="outline" className="gap-1.5 border-primary/30">
+							<IconShieldCheck className="size-3.5 text-primary" />
+							GDPR consent
+						</Badge>
+						<CardTitle className="flex items-center gap-2">
+							<IconCookie className="size-5 text-primary" />
+							Cookies and tracking controls
+						</CardTitle>
+					</div>
+					<div className="flex shrink-0 items-center gap-1">
+						<Button
+							type="button"
+							variant="ghost"
+							size="sm"
+							onClick={() => {
+								setDetailsOpen((current) => {
+									const next = !current
+									emitMetric(next ? "details_opened" : "details_closed")
+									return next
+								})
+							}}
+						>
+							Details
+							<IconChevronDown
+								className={cn(
+									"size-4 transition-transform",
+									detailsOpen && "rotate-180"
+								)}
+							/>
+						</Button>
+						{isModal && (
+							<Button
+								type="button"
+								variant="ghost"
+								size="icon-sm"
+								onClick={closePopup}
+								aria-label="Close privacy settings"
+							>
+								<IconX className="size-4" />
+							</Button>
+						)}
+					</div>
+				</div>
+				<CardDescription>
+					Trust-first consent: optional categories stay disabled until you
+					choose them. You can update or withdraw consent anytime.
+				</CardDescription>
+			</CardHeader>
+
+			<CardContent className="space-y-4">
+				<div className="space-y-2">
+					{COOKIE_CATEGORIES.map((category) => {
+						const enabled = preferences[category.key]
+
+						return (
+							<div
+								key={category.key}
+								className="rounded-lg border border-border/70 p-3"
+							>
+								<div className="flex items-center justify-between gap-3">
+									<div>
+										<p className="font-medium leading-tight">
+											{category.title}
+										</p>
+										<p className="text-xs text-muted-foreground mt-1">
+											{category.description}
+										</p>
+									</div>
+									<div className="flex items-center gap-2">
+										{category.required && (
+											<Badge variant="secondary">Required</Badge>
+										)}
+										<Switch
+											size="sm"
+											checked={enabled}
+											disabled={category.required}
+											onCheckedChange={(nextChecked) => {
+												if (category.required) {
+													return
+												}
+
+												setPreferences((current) => ({
+													...current,
+													[category.key]: nextChecked,
+												}))
+											}}
+											aria-label={`${category.title} cookies`}
+										/>
+									</div>
+								</div>
+							</div>
+						)
+					})}
+				</div>
+
+				{detailsOpen && (
+					<div className="space-y-4 rounded-lg border border-border/70 bg-muted/30 p-3">
+						<Separator />
+						<div className="space-y-2">
+							<p className="text-sm font-medium">Consent metadata recorded</p>
+							<ul className="text-xs text-muted-foreground space-y-1">
+								<li>Region: GDPR</li>
+								<li>Policy version: {policyVersion}</li>
+								<li>Storage key: {storageKey}</li>
+								<li>
+									Timestamp: Consent update time is stored in ISO-8601 format
+								</li>
+								<li>
+									Action: accept all, reject non-essential, or custom save
+								</li>
+							</ul>
+						</div>
+
+						<div className="space-y-2">
+							<p className="text-sm font-medium">Metrics events available</p>
+							<ul className="text-xs text-muted-foreground space-y-1">
+								<li>popup_viewed</li>
+								<li>details_opened / details_closed</li>
+								<li>consent_saved (with category choices)</li>
+								<li>consent_withdrawn</li>
+								<li>Optional dwellTimeMs to measure decision latency</li>
+							</ul>
+						</div>
+
+						<div className="space-y-2">
+							<p className="text-sm font-medium">Cookie register</p>
+							<div className="overflow-x-auto">
+								<table className="w-full text-xs">
+									<thead>
+										<tr className="text-left text-muted-foreground">
+											<th className="pr-3 pb-2">Category</th>
+											<th className="pr-3 pb-2">Purpose</th>
+											<th className="pr-3 pb-2">Providers</th>
+											<th className="pr-3 pb-2">Lawful basis</th>
+											<th className="pb-2">Retention</th>
+										</tr>
+									</thead>
+									<tbody>
+										{COOKIE_CATEGORIES.map((category) => (
+											<tr
+												key={`meta-${category.key}`}
+												className="align-top border-t"
+											>
+												<td className="pr-3 py-2 font-medium">
+													{category.title}
+												</td>
+												<td className="pr-3 py-2">{category.purpose}</td>
+												<td className="pr-3 py-2">{category.providers}</td>
+												<td className="pr-3 py-2">{category.lawfulBasis}</td>
+												<td className="py-2">{category.retention}</td>
+											</tr>
+										))}
+									</tbody>
+								</table>
+							</div>
+						</div>
+
+						{policyUrl && (
+							<Button variant="link" asChild className="h-auto p-0 text-xs">
+								<a href={policyUrl} target="_blank" rel="noreferrer">
+									View full privacy policy
+									<IconExternalLink className="size-3.5" />
+								</a>
+							</Button>
+						)}
+					</div>
+				)}
+			</CardContent>
+
+			<CardFooter className="flex flex-wrap items-center gap-2 justify-between">
+				<div className="flex flex-wrap gap-2">
+					<Button
+						type="button"
+						variant="outline"
+						onClick={handleRejectNonEssential}
+					>
+						Reject non-essential
+					</Button>
+					<Button
+						type="button"
+						variant="secondary"
+						onClick={handleSavePreferences}
+					>
+						Save preferences
+					</Button>
+					<Button type="button" onClick={handleAcceptAll}>
+						Accept all
+					</Button>
+				</div>
+				{hasStoredConsent && (
+					<Button
+						type="button"
+						variant="ghost"
+						size="sm"
+						onClick={handleWithdrawConsent}
+					>
+						Withdraw consent
+					</Button>
+				)}
+			</CardFooter>
+		</Card>
+	)
+
 	return (
 		<>
-			{isOpen && (
-				<div className="fixed inset-x-0 bottom-0 z-50 p-3 sm:bottom-4 sm:right-4 sm:left-auto sm:max-w-3xl">
-					<Card
-						className={cn(
-							"w-full border border-border/70 bg-card/98 backdrop-blur shadow-2xl",
-							className
-						)}
-					>
-						<CardHeader className="space-y-3">
-							<div className="flex items-start justify-between gap-3">
-								<div className="space-y-2">
-									<Badge
-										variant="outline"
-										className="gap-1.5 border-primary/30"
-									>
-										<IconShieldCheck className="size-3.5 text-primary" />
-										GDPR consent
-									</Badge>
-									<CardTitle className="flex items-center gap-2">
-										<IconCookie className="size-5 text-primary" />
-										Cookies and tracking controls
-									</CardTitle>
-								</div>
-								<Button
-									type="button"
-									variant="ghost"
-									size="sm"
-									onClick={() => {
-										setDetailsOpen((current) => {
-											const next = !current
-											emitMetric(next ? "details_opened" : "details_closed")
-											return next
-										})
-									}}
-									className="shrink-0"
-								>
-									Details
-									<IconChevronDown
-										className={cn(
-											"size-4 transition-transform",
-											detailsOpen && "rotate-180"
-										)}
-									/>
-								</Button>
-							</div>
-							<CardDescription>
-								Trust-first consent: optional categories stay disabled until you
-								choose them. You can update or withdraw consent anytime.
-							</CardDescription>
-						</CardHeader>
-
-						<CardContent className="space-y-4">
-							<div className="space-y-2">
-								{COOKIE_CATEGORIES.map((category) => {
-									const enabled = preferences[category.key]
-
-									return (
-										<div
-											key={category.key}
-											className="rounded-lg border border-border/70 p-3"
-										>
-											<div className="flex items-center justify-between gap-3">
-												<div>
-													<p className="font-medium leading-tight">
-														{category.title}
-													</p>
-													<p className="text-xs text-muted-foreground mt-1">
-														{category.description}
-													</p>
-												</div>
-												<div className="flex items-center gap-2">
-													{category.required && (
-														<Badge variant="secondary">Required</Badge>
-													)}
-													<Switch
-														size="sm"
-														checked={enabled}
-														disabled={category.required}
-														onCheckedChange={(nextChecked) => {
-															if (category.required) {
-																return
-															}
-
-															setPreferences((current) => ({
-																...current,
-																[category.key]: nextChecked,
-															}))
-														}}
-														aria-label={`${category.title} cookies`}
-													/>
-												</div>
-											</div>
-										</div>
-									)
-								})}
-							</div>
-
-							{detailsOpen && (
-								<div className="space-y-4 rounded-lg border border-border/70 bg-muted/30 p-3">
-									<Separator />
-									<div className="space-y-2">
-										<p className="text-sm font-medium">
-											Consent metadata recorded
-										</p>
-										<ul className="text-xs text-muted-foreground space-y-1">
-											<li>Region: GDPR</li>
-											<li>Policy version: {policyVersion}</li>
-											<li>Storage key: {storageKey}</li>
-											<li>
-												Timestamp: Consent update time is stored in ISO-8601
-												format
-											</li>
-											<li>
-												Action: accept all, reject non-essential, or custom save
-											</li>
-										</ul>
-									</div>
-
-									<div className="space-y-2">
-										<p className="text-sm font-medium">
-											Metrics events available
-										</p>
-										<ul className="text-xs text-muted-foreground space-y-1">
-											<li>popup_viewed</li>
-											<li>details_opened / details_closed</li>
-											<li>consent_saved (with category choices)</li>
-											<li>consent_withdrawn</li>
-											<li>Optional dwellTimeMs to measure decision latency</li>
-										</ul>
-									</div>
-
-									<div className="space-y-2">
-										<p className="text-sm font-medium">Cookie register</p>
-										<div className="overflow-x-auto">
-											<table className="w-full text-xs">
-												<thead>
-													<tr className="text-left text-muted-foreground">
-														<th className="pr-3 pb-2">Category</th>
-														<th className="pr-3 pb-2">Purpose</th>
-														<th className="pr-3 pb-2">Providers</th>
-														<th className="pr-3 pb-2">Lawful basis</th>
-														<th className="pb-2">Retention</th>
-													</tr>
-												</thead>
-												<tbody>
-													{COOKIE_CATEGORIES.map((category) => (
-														<tr
-															key={`meta-${category.key}`}
-															className="align-top border-t"
-														>
-															<td className="pr-3 py-2 font-medium">
-																{category.title}
-															</td>
-															<td className="pr-3 py-2">{category.purpose}</td>
-															<td className="pr-3 py-2">
-																{category.providers}
-															</td>
-															<td className="pr-3 py-2">
-																{category.lawfulBasis}
-															</td>
-															<td className="py-2">{category.retention}</td>
-														</tr>
-													))}
-												</tbody>
-											</table>
-										</div>
-									</div>
-
-									{policyUrl && (
-										<Button
-											variant="link"
-											asChild
-											className="h-auto p-0 text-xs"
-										>
-											<a href={policyUrl} target="_blank" rel="noreferrer">
-												View full privacy policy
-												<IconExternalLink className="size-3.5" />
-											</a>
-										</Button>
-									)}
-								</div>
-							)}
-						</CardContent>
-
-						<CardFooter className="flex flex-wrap items-center gap-2 justify-between">
-							<div className="flex flex-wrap gap-2">
-								<Button
-									type="button"
-									variant="outline"
-									onClick={handleRejectNonEssential}
-								>
-									Reject non-essential
-								</Button>
-								<Button
-									type="button"
-									variant="secondary"
-									onClick={handleSavePreferences}
-								>
-									Save preferences
-								</Button>
-								<Button type="button" onClick={handleAcceptAll}>
-									Accept all
-								</Button>
-							</div>
-							{hasStoredConsent && (
-								<Button
-									type="button"
-									variant="ghost"
-									size="sm"
-									onClick={handleWithdrawConsent}
-								>
-									Withdraw consent
-								</Button>
-							)}
-						</CardFooter>
-					</Card>
-				</div>
-			)}
+			{isOpen &&
+				(isModal ? (
+					<div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+						<button
+							type="button"
+							className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+							aria-label="Close privacy settings backdrop"
+							onClick={closePopup}
+						/>
+						<div className="relative z-10 w-full max-w-2xl">{popupCard}</div>
+					</div>
+				) : (
+					<div className="fixed inset-x-0 bottom-0 z-50 p-3 sm:bottom-4 sm:right-4 sm:left-auto sm:max-w-3xl">
+						{popupCard}
+					</div>
+				))}
 
 			{showManageButton && hasStoredConsent && !isOpen && (
 				<Button
@@ -514,7 +552,7 @@ export function CookiePopup({
 					variant="outline"
 					size="sm"
 					onClick={() => setIsOpen(true)}
-					className="fixed left-3 bottom-3 z-40 sm:left-4 sm:bottom-4"
+					className="fixed right-3 bottom-3 z-30 sm:right-4 sm:bottom-4"
 				>
 					<IconCookie className="size-4" />
 					{manageButtonLabel}

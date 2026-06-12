@@ -1,8 +1,15 @@
 import { apiKey } from "@better-auth/api-key";
 import { type BetterAuthOptions, betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { admin, anonymous, openAPI, username } from "better-auth/plugins";
+import {
+	admin,
+	anonymous,
+	openAPI,
+	organization,
+	username,
+} from "better-auth/plugins";
 import { db } from "../db/index.js";
+import { ac, adminPluginRoles } from "./admin-permissions.js";
 
 function requireEnv(name: string): string {
 	const value = process.env[name];
@@ -33,6 +40,8 @@ const config = {
 		username(),
 		anonymous(),
 		admin({
+			ac,
+			roles: adminPluginRoles,
 			adminRoles: ["admin"],
 			defaultRole: "user",
 		}),
@@ -59,6 +68,12 @@ const config = {
 				},
 			},
 		]),
+		organization({
+			schema: {
+				organization: { modelName: "workspace" },
+				member: { modelName: "workspace_member" },
+			},
+		}),
 	],
 } satisfies BetterAuthOptions;
 

@@ -30,6 +30,10 @@ export default fp(async (fastify) => {
 				},
 				{ name: "Management", description: "Administrative management APIs" },
 				{ name: "Data", description: "API key-protected data access" },
+				{
+					name: "Workspaces",
+					description: "Workspace CRUD and membership management",
+				},
 			],
 		},
 		transform: ({ schema, url }) => {

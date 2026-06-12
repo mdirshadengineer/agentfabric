@@ -26,6 +26,7 @@
 		"@tanstack/react-query-devtools": "5.100.10",
 		"@tanstack/react-router": "1.168.25",
 		"@tanstack/react-router-devtools": "1.166.13",
+		"arktype": "catalog:",
 		"better-auth": "catalog:",
 		"class-variance-authority": "0.7.1",
 		"clsx": "2.1.1",

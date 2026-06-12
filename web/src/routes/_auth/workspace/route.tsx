@@ -1,4 +1,5 @@
 import { createFileRoute, Outlet } from "@tanstack/react-router"
+import { BannerStackProvider } from "@/components/alert-banner-stack/alert-banner-stack-provider"
 import { meQueryOptions } from "@/features/management/queries/me"
 import { WorkspaceLayout } from "@/features/workspace/layouts"
 import { workspacesQueryOptions } from "@/features/workspace/queries/workspaces"
@@ -15,8 +16,10 @@ export const Route = createFileRoute("/_auth/workspace")({
 
 function RouteComponent() {
 	return (
-		<WorkspaceLayout>
-			<Outlet />
-		</WorkspaceLayout>
+		<BannerStackProvider>
+			<WorkspaceLayout>
+				<Outlet />
+			</WorkspaceLayout>
+		</BannerStackProvider>
 	)
 }

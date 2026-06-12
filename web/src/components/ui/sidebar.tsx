@@ -331,7 +331,7 @@ function SidebarHeader({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="sidebar-header"
       data-sidebar="header"
-      className={cn("flex flex-col gap-2 p-2", className)}
+      className={cn("flex shrink-0 flex-col gap-2 p-2", className)}
       {...props}
     />
   )
@@ -342,7 +342,10 @@ function SidebarFooter({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="sidebar-footer"
       data-sidebar="footer"
-      className={cn("flex flex-col gap-2 p-2", className)}
+      className={cn(
+        "relative z-10 mt-auto flex shrink-0 flex-col gap-2 border-t border-sidebar-border bg-sidebar p-2",
+        className
+      )}
       {...props}
     />
   )

@@ -1,16 +1,24 @@
 import { apiBaseURL } from "@/lib/env"
 
+function managementHeaders(init: RequestInit): Headers {
+	const headers = new Headers(init.headers)
+	const hasBody = init.body !== undefined && init.body !== null
+
+	if (hasBody && !headers.has("content-type")) {
+		headers.set("content-type", "application/json")
+	}
+
+	return headers
+}
+
 export async function requestManagement<T>(
 	path: string,
 	init: RequestInit = {}
 ): Promise<T> {
 	const response = await fetch(`${apiBaseURL}/api/v1/management${path}`, {
 		credentials: "include",
-		headers: {
-			"content-type": "application/json",
-			...(init.headers ?? {}),
-		},
 		...init,
+		headers: managementHeaders(init),
 	})
 
 	const payload = (await response.json().catch(() => ({}))) as {

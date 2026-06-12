@@ -1,13 +1,11 @@
 import { queryOptions, useQuery } from "@tanstack/react-query"
+import type { Workspace } from "@/features/workspace/types"
 import { queryKeys } from "@/lib/api/query-keys"
-import type { WorkspaceSummary } from "@/lib/api/types"
+import { requestWorkspace } from "@/lib/api/workspace-client"
 
-async function fetchWorkspaces(): Promise<WorkspaceSummary[]> {
-	// TODO: Replace with GET /api/v1/workspaces when the endpoint is available.
-	return [
-		{ id: "workspace-1", name: "Workspace 1" },
-		{ id: "workspace-2", name: "Workspace 2" },
-	]
+async function fetchWorkspaces(): Promise<Workspace[]> {
+	const data = await requestWorkspace<{ workspaces: Workspace[] }>("/")
+	return data.workspaces ?? []
 }
 
 export const workspacesQueryOptions = queryOptions({

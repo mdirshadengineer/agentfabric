@@ -1,23 +1,32 @@
 import {
 	IconActivityHeartbeat,
+	IconAlertTriangle,
+	IconCookie,
 	IconRefresh,
 	IconSend2,
 	IconTrash,
 } from "@tabler/icons-react"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
-import * as React from "react"
+import { useEffect, useState } from "react"
 
-import type { CookieConsentRecord } from "@/components/cookie-popup"
+import {
+	COOKIE_CONSENT_CHANGED_EVENT,
+	type CookieConsentRecord,
+	openCookieSettings,
+} from "@/components/cookie-popup"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardHeader,
-	CardTitle,
-} from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
+import { DevJsonBlock } from "@/features/dev/components/dev-json-block"
+import { DevPageHeader } from "@/features/dev/components/dev-page-header"
+import { DevPanelCard } from "@/features/dev/components/dev-panel-card"
+import {
+	DevStatGrid,
+	DevStatusBar,
+} from "@/features/dev/components/dev-stat-grid"
 import {
 	applyAnalyticsConsent,
 	applyStoredConsent,
@@ -44,21 +53,14 @@ type AnalyticsSnapshot = {
 }
 
 function prettyJson(value: unknown) {
-	if (value === null || value === undefined) {
-		return "-"
-	}
-
-	if (typeof value === "string") {
-		return value
-	}
-
-	return JSON.stringify(value, null, 2)
+	if (value === null || value === undefined) return null
+	if (typeof value === "string") return value
+	return value
 }
 
 function getStorageKey() {
 	const manualConsentTestingEnabled =
 		import.meta.env.DEV || import.meta.env.VITE_COOKIE_MANUAL_TESTING === "true"
-
 	return manualConsentTestingEnabled
 		? "agentfabric.cookie-consent.testing"
 		: "agentfabric.cookie-consent"
@@ -111,80 +113,144 @@ function getSnapshot(): AnalyticsSnapshot {
 	}
 }
 
+function StatusBadge({ active }: { active: boolean }) {
+	return (
+		<Badge variant={active ? "default" : "secondary"}>
+			{active ? "Active" : "Inactive"}
+		</Badge>
+	)
+}
+
+function ConsentBadge({ allowed }: { allowed: boolean }) {
+	return (
+		<Badge variant={allowed ? "default" : "outline"}>
+			{allowed ? "Allowed" : "Denied"}
+		</Badge>
+	)
+}
+
+const analyticsQueryKey = ["dev", "analytics", "snapshot"] as const
+
 function RouteComponent() {
-	const [snapshot, setSnapshot] = React.useState<AnalyticsSnapshot | null>(null)
-	const [status, setStatus] = React.useState("Ready")
+	const queryClient = useQueryClient()
 
-	const refresh = React.useCallback(() => {
-		setSnapshot(getSnapshot())
-	}, [])
+	const snapshotQuery = useQuery({
+		queryKey: analyticsQueryKey,
+		queryFn: getSnapshot,
+		staleTime: 2_000,
+		refetchInterval: 10_000,
+	})
 
-	React.useEffect(() => {
-		refresh()
-	}, [refresh])
+	const snapshot = snapshotQuery.data ?? null
+	const [statusMessage, setStatusMessage] = useState("Ready")
 
-	const handleReapplyStoredConsent = () => {
-		applyStoredConsent(getStorageKey())
-		setStatus("Re-applied consent from localStorage.")
-		refresh()
-	}
+	useEffect(() => {
+		const refreshSnapshot = () => {
+			queryClient.invalidateQueries({ queryKey: analyticsQueryKey })
+		}
 
-	const handleDisableAnalytics = () => {
-		window.localStorage.removeItem(getStorageKey())
-		applyAnalyticsConsent({
-			essential: true,
-			functional: false,
-			analytics: false,
-			marketing: false,
-		})
-		setStatus("Consent removed and analytics disabled.")
-		refresh()
-	}
+		window.addEventListener(COOKIE_CONSENT_CHANGED_EVENT, refreshSnapshot)
+		return () =>
+			window.removeEventListener(COOKIE_CONSENT_CHANGED_EVENT, refreshSnapshot)
+	}, [queryClient])
 
-	const handleSendTestEvents = () => {
-		window.gtag?.("event", "consent_test_event", {
-			source: "test-analytics-route",
-			timestamp: new Date().toISOString(),
-		})
+	const reapplyConsent = useMutation({
+		mutationFn: async () => {
+			applyStoredConsent(getStorageKey())
+		},
+		onSuccess: () => {
+			setStatusMessage("Re-applied consent from localStorage.")
+			queryClient.invalidateQueries({ queryKey: analyticsQueryKey })
+		},
+	})
 
-		window.clarity?.("event", "consent_test_event")
+	const disableAnalytics = useMutation({
+		mutationFn: async () => {
+			window.localStorage.removeItem(getStorageKey())
+			applyAnalyticsConsent({
+				essential: true,
+				functional: false,
+				analytics: false,
+				marketing: false,
+			})
+		},
+		onSuccess: () => {
+			setStatusMessage("Consent removed and analytics disabled.")
+			queryClient.invalidateQueries({ queryKey: analyticsQueryKey })
+		},
+	})
 
-		setStatus("Sent test event to GA and Clarity (if currently enabled).")
-		refresh()
-	}
+	const sendTestEvents = useMutation({
+		mutationFn: async () => {
+			window.gtag?.("event", "consent_test_event", {
+				source: "test-analytics-route",
+				timestamp: new Date().toISOString(),
+			})
+			window.clarity?.("event", "consent_test_event")
+		},
+		onSuccess: () => {
+			setStatusMessage(
+				"Sent test event to GA and Clarity (if currently enabled)."
+			)
+			queryClient.invalidateQueries({ queryKey: analyticsQueryKey })
+		},
+	})
 
-	const analyticsAllowed =
-		snapshot?.consentRecord?.preferences.analytics === true
+	const preferences = snapshot?.consentRecord?.preferences
+	const analyticsAllowed = preferences?.analytics === true
+	const trackersActive =
+		Boolean(snapshot?.gaScriptLoaded) ||
+		Boolean(snapshot?.clarityScriptLoaded) ||
+		Boolean(snapshot?.hasGtag) ||
+		Boolean(snapshot?.hasClarity)
+	const consentTrackerMismatch =
+		Boolean(snapshot?.hasConsent) &&
+		((analyticsAllowed && !trackersActive) ||
+			(!analyticsAllowed && trackersActive))
 
 	return (
-		<div className="mx-auto w-full max-w-6xl space-y-6 p-6 md:p-10">
-			<Card className="border-border/70">
-				<CardHeader className="space-y-3">
-					<div className="flex flex-wrap items-center gap-2">
-						<Badge variant="outline" className="gap-1.5">
-							<IconActivityHeartbeat className="size-3.5" />
-							Analytics Consent Test
-						</Badge>
+		<div className="space-y-6">
+			<DevPageHeader
+				icon={<IconActivityHeartbeat className="size-5" />}
+				badges={
+					<>
 						<Badge variant={analyticsAllowed ? "default" : "secondary"}>
 							{analyticsAllowed ? "Analytics allowed" : "Analytics denied"}
 						</Badge>
-					</div>
-					<CardTitle>Consent-gated tracking diagnostics</CardTitle>
-					<CardDescription>
-						Use your cookie popup to change preferences, then verify the live
-						tracker state here.
-					</CardDescription>
-				</CardHeader>
-				<CardContent className="space-y-4">
+						{snapshot?.hasConsent ? (
+							<Badge variant="outline">Consent stored</Badge>
+						) : (
+							<Badge variant="outline">No consent yet</Badge>
+						)}
+					</>
+				}
+				title="Consent-gated tracking diagnostics"
+				description="Change cookie preferences with the button below, then verify the live tracker state updates. On dev routes the privacy dialog opens as a centered modal instead of the floating banner."
+			/>
+
+			<Card className="border-border/70 bg-card/95 shadow-sm">
+				<CardContent className="space-y-4 pt-6">
 					<div className="flex flex-wrap gap-2">
-						<Button type="button" variant="outline" onClick={refresh}>
+						<Button
+							type="button"
+							variant="outline"
+							onClick={openCookieSettings}
+						>
+							<IconCookie className="size-4" />
+							Open privacy settings
+						</Button>
+						<Button
+							type="button"
+							variant="outline"
+							onClick={() => snapshotQuery.refetch()}
+						>
 							<IconRefresh className="size-4" />
 							Refresh snapshot
 						</Button>
 						<Button
 							type="button"
 							variant="secondary"
-							onClick={handleReapplyStoredConsent}
+							onClick={() => reapplyConsent.mutate()}
 						>
 							<IconRefresh className="size-4" />
 							Re-apply stored consent
@@ -192,14 +258,14 @@ function RouteComponent() {
 						<Button
 							type="button"
 							variant="destructive"
-							onClick={handleDisableAnalytics}
+							onClick={() => disableAnalytics.mutate()}
 						>
 							<IconTrash className="size-4" />
 							Clear consent + disable
 						</Button>
 						<Button
 							type="button"
-							onClick={handleSendTestEvents}
+							onClick={() => sendTestEvents.mutate()}
 							disabled={!analyticsAllowed}
 						>
 							<IconSend2 className="size-4" />
@@ -207,87 +273,111 @@ function RouteComponent() {
 						</Button>
 					</div>
 
-					<p className="text-sm text-muted-foreground">{status}</p>
+					{consentTrackerMismatch && (
+						<Alert variant="destructive">
+							<IconAlertTriangle />
+							<AlertTitle>Consent and tracker state mismatch</AlertTitle>
+							<AlertDescription>
+								{analyticsAllowed
+									? "Analytics consent is granted but trackers are not active. Click Re-apply stored consent to load scripts, or save preferences again from privacy settings."
+									: "Analytics consent is denied but tracker scripts appear active. Click Clear consent + disable to reset runtime state."}
+							</AlertDescription>
+						</Alert>
+					)}
+
+					<DevStatusBar>{statusMessage}</DevStatusBar>
+
+					{snapshot && (
+						<DevStatGrid
+							items={[
+								{
+									label: "Storage key",
+									value: snapshot.storageKey,
+									mono: true,
+								},
+								{
+									label: "Last action",
+									value: snapshot.consentRecord?.action ?? "none",
+								},
+								{
+									label: "Analytics consent",
+									value: <ConsentBadge allowed={analyticsAllowed} />,
+								},
+								{
+									label: "GA script",
+									value: <StatusBadge active={snapshot.gaScriptLoaded} />,
+								},
+								{
+									label: "Clarity script",
+									value: <StatusBadge active={snapshot.clarityScriptLoaded} />,
+								},
+								{
+									label: "gtag / clarity APIs",
+									value: (
+										<span className="inline-flex flex-wrap gap-1.5">
+											<StatusBadge active={snapshot.hasGtag} />
+											<StatusBadge active={snapshot.hasClarity} />
+										</span>
+									),
+								},
+							]}
+						/>
+					)}
+
 					<Separator />
 
 					<div className="grid gap-4 md:grid-cols-2">
-						<Card className="border-border/60">
-							<CardHeader>
-								<CardTitle className="text-base">
-									Runtime tracker state
-								</CardTitle>
-							</CardHeader>
-							<CardContent>
-								<pre className="max-h-80 overflow-auto rounded-md border bg-muted/30 p-3 text-xs leading-5">
-									{prettyJson(
-										snapshot
-											? {
-													gaMeasurementId: snapshot.gaMeasurementId,
-													clarityProjectId: snapshot.clarityProjectId,
-													gaScriptLoaded: snapshot.gaScriptLoaded,
-													clarityScriptLoaded: snapshot.clarityScriptLoaded,
-													gaDisabledFlag: snapshot.gaDisabledFlag,
-													hasGtag: snapshot.hasGtag,
-													hasDataLayer: snapshot.hasDataLayer,
-													hasClarity: snapshot.hasClarity,
-												}
-											: null
-									)}
-								</pre>
-							</CardContent>
-						</Card>
+						<DevPanelCard title="Runtime tracker state">
+							<DevJsonBlock
+								value={
+									snapshot
+										? {
+												gaMeasurementId: snapshot.gaMeasurementId,
+												clarityProjectId: snapshot.clarityProjectId,
+												gaScriptLoaded: snapshot.gaScriptLoaded,
+												clarityScriptLoaded: snapshot.clarityScriptLoaded,
+												gaDisabledFlag: snapshot.gaDisabledFlag,
+												hasGtag: snapshot.hasGtag,
+												hasDataLayer: snapshot.hasDataLayer,
+												hasClarity: snapshot.hasClarity,
+											}
+										: null
+								}
+							/>
+						</DevPanelCard>
 
-						<Card className="border-border/60">
-							<CardHeader>
-								<CardTitle className="text-base">
-									Current consent record
-								</CardTitle>
-							</CardHeader>
-							<CardContent>
-								<pre className="max-h-80 overflow-auto rounded-md border bg-muted/30 p-3 text-xs leading-5">
-									{prettyJson(
-										snapshot
-											? {
-													storageKey: snapshot.storageKey,
-													hasConsent: snapshot.hasConsent,
-													record: snapshot.consentRecord,
-												}
-											: null
-									)}
-								</pre>
-							</CardContent>
-						</Card>
+						<DevPanelCard title="Current consent record">
+							<DevJsonBlock
+								value={
+									snapshot
+										? {
+												storageKey: snapshot.storageKey,
+												hasConsent: snapshot.hasConsent,
+												record: snapshot.consentRecord,
+											}
+										: null
+								}
+							/>
+						</DevPanelCard>
 					</div>
 
 					<div className="grid gap-4 md:grid-cols-2">
-						<Card className="border-border/60">
-							<CardHeader>
-								<CardTitle className="text-base">
-									Last debug consent record
-								</CardTitle>
-								<CardDescription>
-									Available when manual testing mode stores callback payloads.
-								</CardDescription>
-							</CardHeader>
-							<CardContent>
-								<pre className="max-h-64 overflow-auto rounded-md border bg-muted/30 p-3 text-xs leading-5">
-									{prettyJson(snapshot?.lastConsentRecord ?? null)}
-								</pre>
-							</CardContent>
-						</Card>
+						<DevPanelCard
+							title="Last debug consent record"
+							description="Available when manual testing mode stores callback payloads."
+						>
+							<DevJsonBlock
+								value={prettyJson(snapshot?.lastConsentRecord ?? null)}
+								maxHeightClassName="max-h-64"
+							/>
+						</DevPanelCard>
 
-						<Card className="border-border/60">
-							<CardHeader>
-								<CardTitle className="text-base">
-									Last debug consent metric
-								</CardTitle>
-							</CardHeader>
-							<CardContent>
-								<pre className="max-h-64 overflow-auto rounded-md border bg-muted/30 p-3 text-xs leading-5">
-									{prettyJson(snapshot?.lastConsentMetric ?? null)}
-								</pre>
-							</CardContent>
-						</Card>
+						<DevPanelCard title="Last debug consent metric">
+							<DevJsonBlock
+								value={prettyJson(snapshot?.lastConsentMetric ?? null)}
+								maxHeightClassName="max-h-64"
+							/>
+						</DevPanelCard>
 					</div>
 				</CardContent>
 			</Card>

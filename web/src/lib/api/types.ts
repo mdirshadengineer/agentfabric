@@ -16,6 +16,11 @@ export type MeResponse = {
 		impersonatedBy?: string | null
 	}
 	isImpersonating: boolean
+	roles: string[]
+	isAdmin: boolean
+	isOperationsAdmin: boolean
+	canManageRoles: boolean
+	canUseAdminPlugin: boolean
 }
 
 export type WorkspaceSummary = {
