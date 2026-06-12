@@ -21,19 +21,31 @@ export default fp(async (fastify) => {
 				title: "AgentFabric API",
 				version: "1.0.0",
 			},
+			tags: [
+				{ name: "System", description: "Health checks and observability" },
+				{ name: "better-auth", description: "Better Auth endpoints" },
+				{
+					name: "Current User",
+					description: "Current user and session context",
+				},
+				{ name: "Management", description: "Administrative management APIs" },
+				{ name: "Data", description: "API key-protected data access" },
+			],
 		},
 		transform: ({ schema, url }) => {
+			const routeSchema = schema ?? {};
+
 			if (!shouldDocumentRoute(url)) {
 				return {
 					schema: {
-						...schema,
+						...routeSchema,
 						hide: true,
 					},
 					url,
 				};
 			}
 
-			return { schema, url };
+			return { schema: routeSchema, url };
 		},
 	});
 

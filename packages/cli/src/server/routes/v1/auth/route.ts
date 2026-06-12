@@ -301,6 +301,9 @@ export default async function (fastify: FastifyInstance) {
 		// Auth endpoints are exempt from the global rate limit; apply a tighter
 		// per-IP limit to guard against brute-force attacks.
 		config: { rateLimit: { max: 20, timeWindow: "1 minute" } },
+		schema: {
+			tags: ["better-auth"],
+		},
 		handler: async (request: FastifyRequest, reply: FastifyReply) => {
 			const host = request.headers.host ?? "localhost";
 			const requestUrl = new URL(request.url, `${request.protocol}://${host}`);

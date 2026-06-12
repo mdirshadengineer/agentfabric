@@ -67,20 +67,33 @@ async function setUserRoleWithBetterAuth(
 }
 
 export default async function (fastify: FastifyInstance) {
-	fastify.get("/me", async (request: FastifyRequest, reply: FastifyReply) => {
-		if (!(await ensureAuthenticated(request, reply))) {
-			return;
-		}
+	fastify.get(
+		"/me",
+		{
+			schema: {
+				tags: ["Current User"],
+			},
+		},
+		async (request: FastifyRequest, reply: FastifyReply) => {
+			if (!(await ensureAuthenticated(request, reply))) {
+				return;
+			}
 
-		return reply.send({
-			user: request.user,
-			session: request.session,
-			isImpersonating: Boolean(request.session?.impersonatedBy),
-		});
-	});
+			return reply.send({
+				user: request.user,
+				session: request.session,
+				isImpersonating: Boolean(request.session?.impersonatedBy),
+			});
+		},
+	);
 
 	fastify.post(
 		"/bootstrap-admin",
+		{
+			schema: {
+				tags: ["Management"],
+			},
+		},
 		async (request: FastifyRequest, reply: FastifyReply) => {
 			if (!(await ensureAuthenticated(request, reply))) {
 				return;
@@ -122,6 +135,11 @@ export default async function (fastify: FastifyInstance) {
 
 	fastify.get(
 		"/users",
+		{
+			schema: {
+				tags: ["Management"],
+			},
+		},
 		async (request: FastifyRequest, reply: FastifyReply) => {
 			if (!(await ensureAdmin(request, reply))) {
 				return;
@@ -145,6 +163,11 @@ export default async function (fastify: FastifyInstance) {
 
 	fastify.patch<{ Params: { userId: string }; Body: UpdateUserRoleBody }>(
 		"/users/:userId/role",
+		{
+			schema: {
+				tags: ["Management"],
+			},
+		},
 		async (
 			request: FastifyRequest<{
 				Params: { userId: string };

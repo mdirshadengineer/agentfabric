@@ -35,8 +35,16 @@ export default fp(async (fastify) => {
 		recordHttpRequestMetric(baseMetric);
 	});
 
-	fastify.get("/metrics", async (_request, reply) => {
-		reply.header("content-type", registry.contentType);
-		return registry.metrics();
-	});
+	fastify.get(
+		"/metrics",
+		{
+			schema: {
+				tags: ["System"],
+			},
+		},
+		async (_request, reply) => {
+			reply.header("content-type", registry.contentType);
+			return registry.metrics();
+		},
+	);
 });

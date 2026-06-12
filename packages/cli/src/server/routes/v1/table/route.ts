@@ -71,6 +71,9 @@ export default async function (fastify: FastifyInstance) {
 		{
 			preHandler: [fastify.authenticateApiKey],
 			config: { rateLimit: { max: 60, timeWindow: "1 minute" } },
+			schema: {
+				tags: ["Data"],
+			},
 		},
 		async (
 			request: FastifyRequest<{ Querystring: TableQuery }>,
