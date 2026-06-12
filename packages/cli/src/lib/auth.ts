@@ -1,7 +1,7 @@
 import { apiKey } from "@better-auth/api-key";
 import { type BetterAuthOptions, betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { admin, anonymous, username } from "better-auth/plugins";
+import { admin, anonymous, openAPI, username } from "better-auth/plugins";
 import { db } from "../db/index.js";
 
 function requireEnv(name: string): string {
@@ -29,6 +29,7 @@ const config = {
 		requireEmailVerification: false,
 	},
 	plugins: [
+		openAPI(),
 		username(),
 		anonymous(),
 		admin({

@@ -67,7 +67,7 @@ function sanitizeUserAgent(userAgent: string | null): string | null {
 
 export default async function (fastify: FastifyInstance) {
 	fastify.get<{ Querystring: TableQuery }>(
-		"/table",
+		"/",
 		{
 			preHandler: [fastify.authenticateApiKey],
 			config: { rateLimit: { max: 60, timeWindow: "1 minute" } },
