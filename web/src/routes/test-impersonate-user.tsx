@@ -4,10 +4,9 @@ import {
 	IconRefresh,
 	IconShield,
 	IconUser,
-	IconUserCog,
 } from "@tabler/icons-react"
 import { createFileRoute } from "@tanstack/react-router"
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -18,9 +17,8 @@ import {
 	CardTitle,
 } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
 import { requestManagement } from "@/lib/api/management-client"
-import type { RoleDefinition, UserRecord } from "@/lib/api/types"
+import type { UserRecord } from "@/lib/api/types"
 import { authBaseURL, authClient, signOut } from "@/lib/auth"
 
 export const Route = createFileRoute("/test-impersonate-user")({
@@ -33,12 +31,12 @@ type RequestState =
 	| "signing-up"
 	| "signing-out"
 	| "bootstrapping"
-	| "creating-role"
-	| "updating-role"
 	| "updating-user-role"
 	| "impersonating"
 	| "stopping-impersonation"
 	| "refreshing"
+
+const SUPPORTED_ROLES = ["user", "admin"] as const
 
 function formatJson(value: unknown): string {
 	if (value === undefined) {
@@ -68,14 +66,7 @@ function RouteComponent() {
 	const [password, setPassword] = useState("")
 	const [name, setName] = useState("")
 
-	const [roles, setRoles] = useState<RoleDefinition[]>([])
 	const [users, setUsers] = useState<UserRecord[]>([])
-	const [selectedRoleId, setSelectedRoleId] = useState("")
-	const [roleName, setRoleName] = useState("")
-	const [roleDescription, setRoleDescription] = useState("")
-	const [rolePermissions, setRolePermissions] = useState<string[]>([])
-	const [replaceExistingUserRoles, setReplaceExistingUserRoles] =
-		useState(false)
 
 	const [selectedUserId, setSelectedUserId] = useState("")
 	const [selectedUserRole, setSelectedUserRole] = useState("user")
@@ -84,43 +75,26 @@ function RouteComponent() {
 
 	const [lastPayload, setLastPayload] = useState<unknown>(null)
 
-	const selectedRole = useMemo(
-		() => roles.find((role) => role.id === selectedRoleId) ?? null,
-		[roles, selectedRoleId]
-	)
-
 	useEffect(() => {
 		void refreshAll()
 	}, [])
-
-	useEffect(() => {
-		if (!selectedRole) {
-			return
-		}
-
-		setRoleName(selectedRole.name)
-		setRoleDescription(selectedRole.description ?? "")
-		setRolePermissions(selectedRole.permissions ?? [])
-	}, [selectedRole])
 
 	async function refreshAll() {
 		setRequestState("refreshing")
 		setErrorMessage(null)
 		try {
-			const [session, me, roleResult] = await Promise.all([
+			const [session, me] = await Promise.all([
 				authClient.getSession(),
 				requestManagement<{
 					user: unknown
 					session: unknown
 					isImpersonating: boolean
 				}>("/me"),
-				requestManagement<{ roles: RoleDefinition[] }>("/roles"),
 			])
 
 			setSessionData(session)
 			setMeData(me)
-			setRoles(roleResult.roles)
-			setLastPayload({ session, me, roles: roleResult.roles })
+			setLastPayload({ session, me })
 
 			try {
 				const userResult = await requestManagement<{ users: UserRecord[] }>(
@@ -220,66 +194,6 @@ function RouteComponent() {
 		}
 	}
 
-	async function handleCreateRole() {
-		setRequestState("creating-role")
-		setErrorMessage(null)
-		try {
-			const result = await requestManagement<{ role: RoleDefinition }>(
-				"/roles",
-				{
-					method: "POST",
-					body: JSON.stringify({
-						name: roleName,
-						description: roleDescription,
-						permissions: rolePermissions,
-					}),
-				}
-			)
-			setLastPayload(result)
-			setStatusMessage(`Created role ${result.role.name}`)
-			await refreshAll()
-		} catch (error) {
-			setErrorMessage(
-				error instanceof Error ? error.message : "Create role failed"
-			)
-		} finally {
-			setRequestState("idle")
-		}
-	}
-
-	async function handleUpdateRole() {
-		if (!selectedRoleId) {
-			setErrorMessage("Select a role first")
-			return
-		}
-
-		setRequestState("updating-role")
-		setErrorMessage(null)
-		try {
-			const result = await requestManagement<{ message: string }>(
-				`/roles/${selectedRoleId}`,
-				{
-					method: "PATCH",
-					body: JSON.stringify({
-						name: roleName,
-						description: roleDescription,
-						permissions: rolePermissions,
-						replaceInUsers: replaceExistingUserRoles,
-					}),
-				}
-			)
-			setLastPayload(result)
-			setStatusMessage(result.message)
-			await refreshAll()
-		} catch (error) {
-			setErrorMessage(
-				error instanceof Error ? error.message : "Update role failed"
-			)
-		} finally {
-			setRequestState("idle")
-		}
-	}
-
 	async function handleUpdateUserRole() {
 		if (!selectedUserId) {
 			setErrorMessage("Select a user first")
@@ -360,16 +274,17 @@ function RouteComponent() {
 							<Badge className="bg-emerald-500/15 text-emerald-800">
 								Login
 							</Badge>
-							<Badge className="bg-cyan-500/15 text-cyan-800">Role CRUD</Badge>
+							<Badge className="bg-cyan-500/15 text-cyan-800">
+								Admin/User Roles
+							</Badge>
 							<Badge className="bg-violet-500/15 text-violet-800">
 								Impersonation
 							</Badge>
 						</div>
 						<CardTitle className="text-3xl">Admin Playground</CardTitle>
 						<CardDescription>
-							Use this page to sign in, bootstrap the first admin, create or
-							update roles, assign roles to users, and impersonate users for
-							support testing.
+							Use this page to sign in, bootstrap the first admin, assign
+							admin/user roles, and impersonate users for support testing.
 						</CardDescription>
 					</CardHeader>
 					<CardContent className="grid gap-3 text-sm sm:grid-cols-3">
@@ -460,96 +375,9 @@ function RouteComponent() {
 					<Card>
 						<CardHeader>
 							<CardTitle className="flex items-center gap-2 text-lg">
-								<IconUserCog className="size-4" />
-								Role Playground
+								<IconShield className="size-4" />
+								User Roles
 							</CardTitle>
-						</CardHeader>
-						<CardContent className="space-y-3">
-							<select
-								className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
-								value={selectedRoleId}
-								onChange={(event) => setSelectedRoleId(event.target.value)}
-							>
-								<option value="">Select role to edit</option>
-								{roles.map((role) => (
-									<option key={role.id} value={role.id}>
-										{role.name}
-									</option>
-								))}
-							</select>
-							<Input
-								placeholder="role name (example: support_manager)"
-								value={roleName}
-								onChange={(event) => setRoleName(event.target.value)}
-							/>
-							<Textarea
-								placeholder="Role description"
-								value={roleDescription}
-								onChange={(event) => setRoleDescription(event.target.value)}
-							/>
-							<div className="space-y-2">
-								<p className="text-sm font-medium text-slate-900">
-									Permissions
-								</p>
-								<div className="space-y-2 rounded-md border p-3 bg-slate-50">
-									{[
-										"manage_users",
-										"view_audit",
-										"manage_roles",
-										"manage_api_keys",
-									].map((perm) => (
-										<label
-											key={perm}
-											className="flex items-center gap-2 text-sm"
-										>
-											<input
-												type="checkbox"
-												checked={rolePermissions.includes(perm)}
-												onChange={(event) => {
-													if (event.target.checked) {
-														setRolePermissions([...rolePermissions, perm])
-													} else {
-														setRolePermissions(
-															rolePermissions.filter((p) => p !== perm)
-														)
-													}
-												}}
-											/>
-											<span className="text-slate-700">{perm}</span>
-										</label>
-									))}
-								</div>
-							</div>
-							<label className="flex items-center gap-2 text-sm text-slate-700">
-								<input
-									type="checkbox"
-									checked={replaceExistingUserRoles}
-									onChange={(event) =>
-										setReplaceExistingUserRoles(event.target.checked)
-									}
-								/>
-								Replace existing users using the old role name
-							</label>
-							<div className="flex flex-wrap gap-2">
-								<Button disabled={busy} onClick={handleCreateRole}>
-									Create role
-								</Button>
-								<Button
-									disabled={busy || !selectedRoleId}
-									variant="outline"
-									onClick={handleUpdateRole}
-								>
-									Update role
-								</Button>
-							</div>
-						</CardContent>
-					</Card>
-				</div>
-
-				<div className="grid gap-6 lg:grid-cols-2">
-					<Card>
-						<CardHeader>
-							<CardTitle>User Roles</CardTitle>
 							<CardDescription>
 								Admin-only listing of users for role assignment.
 							</CardDescription>
@@ -572,9 +400,9 @@ function RouteComponent() {
 								value={selectedUserRole}
 								onChange={(event) => setSelectedUserRole(event.target.value)}
 							>
-								{roles.map((role) => (
-									<option key={role.id} value={role.name}>
-										{role.name}
+								{SUPPORTED_ROLES.map((role) => (
+									<option key={role} value={role}>
+										{role}
 									</option>
 								))}
 							</select>
@@ -595,7 +423,9 @@ function RouteComponent() {
 							</div>
 						</CardContent>
 					</Card>
+				</div>
 
+				<div className="grid gap-6 lg:grid-cols-2">
 					<Card>
 						<CardHeader>
 							<CardTitle className="flex items-center gap-2">
@@ -640,80 +470,6 @@ function RouteComponent() {
 						</CardContent>
 					</Card>
 				</div>
-
-				<Card>
-					<CardHeader>
-						<CardTitle className="flex items-center gap-2">
-							<IconShield className="size-4" />
-							Role Capabilities Matrix
-						</CardTitle>
-						<CardDescription>
-							Overview of permissions assigned to each role in your system.
-						</CardDescription>
-					</CardHeader>
-					<CardContent>
-						<div className="overflow-x-auto">
-							<table className="w-full text-sm">
-								<thead>
-									<tr className="border-b">
-										<th className="text-left p-2 font-medium">Role</th>
-										<th className="text-left p-2 font-medium">manage_users</th>
-										<th className="text-left p-2 font-medium">view_audit</th>
-										<th className="text-left p-2 font-medium">manage_roles</th>
-										<th className="text-left p-2 font-medium">
-											manage_api_keys
-										</th>
-									</tr>
-								</thead>
-								<tbody>
-									{roles.map((role) => (
-										<tr key={role.id} className="border-b hover:bg-slate-50">
-											<td className="p-2 font-medium text-slate-900">
-												{role.name}
-											</td>
-											<td className="p-2 text-center">
-												{role.permissions?.includes("manage_users") ? (
-													<Badge className="bg-green-100 text-green-800">
-														✓
-													</Badge>
-												) : (
-													<span className="text-slate-400">—</span>
-												)}
-											</td>
-											<td className="p-2 text-center">
-												{role.permissions?.includes("view_audit") ? (
-													<Badge className="bg-green-100 text-green-800">
-														✓
-													</Badge>
-												) : (
-													<span className="text-slate-400">—</span>
-												)}
-											</td>
-											<td className="p-2 text-center">
-												{role.permissions?.includes("manage_roles") ? (
-													<Badge className="bg-green-100 text-green-800">
-														✓
-													</Badge>
-												) : (
-													<span className="text-slate-400">—</span>
-												)}
-											</td>
-											<td className="p-2 text-center">
-												{role.permissions?.includes("manage_api_keys") ? (
-													<Badge className="bg-green-100 text-green-800">
-														✓
-													</Badge>
-												) : (
-													<span className="text-slate-400">—</span>
-												)}
-											</td>
-										</tr>
-									))}
-								</tbody>
-							</table>
-						</div>
-					</CardContent>
-				</Card>
 
 				<div className="grid gap-6 lg:grid-cols-2">
 					<Card>

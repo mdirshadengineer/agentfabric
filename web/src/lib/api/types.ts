@@ -1,12 +1,3 @@
-export type RoleDefinition = {
-	id: string
-	name: string
-	description: string | null
-	permissions: string[]
-	createdAt: string
-	updatedAt: string
-}
-
 export type UserRecord = {
 	id: string
 	name: string
