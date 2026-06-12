@@ -1,3 +1,4 @@
+import { relations } from "drizzle-orm";
 import {
 	boolean,
 	index,
@@ -6,7 +7,6 @@ import {
 	text,
 	timestamp,
 } from "drizzle-orm/pg-core";
-import { relations } from "drizzle-orm/relations";
 
 export const user = pgTable("user", {
 	id: text("id").primaryKey(),
@@ -14,62 +14,19 @@ export const user = pgTable("user", {
 	email: text("email").notNull().unique(),
 	emailVerified: boolean("email_verified").default(false).notNull(),
 	image: text("image"),
-	role: text("role"),
-	banned: boolean("banned"),
-	banReason: text("ban_reason"),
-	banExpires: timestamp("ban_expires", { precision: 6, withTimezone: true }),
 	createdAt: timestamp("created_at").defaultNow().notNull(),
 	updatedAt: timestamp("updated_at")
 		.defaultNow()
 		.$onUpdate(() => /* @__PURE__ */ new Date())
 		.notNull(),
+	username: text("username").unique(),
+	displayUsername: text("display_username"),
+	isAnonymous: boolean("is_anonymous").default(false),
+	role: text("role"),
+	banned: boolean("banned").default(false),
+	banReason: text("ban_reason"),
+	banExpires: timestamp("ban_expires"),
 });
-
-export const roleDefinition = pgTable(
-	"role_definition",
-	{
-		id: text("id").primaryKey(),
-		name: text("name").notNull().unique(),
-		description: text("description"),
-		createdAt: timestamp("created_at", {
-			precision: 6,
-			withTimezone: true,
-		})
-			.defaultNow()
-			.notNull(),
-		updatedAt: timestamp("updated_at", {
-			precision: 6,
-			withTimezone: true,
-		})
-			.defaultNow()
-			.$onUpdate(() => /* @__PURE__ */ new Date())
-			.notNull(),
-	},
-	(table) => [index("role_definition_name_idx").on(table.name)],
-);
-
-export const rolePermission = pgTable(
-	"role_permission",
-	{
-		id: text("id").primaryKey(),
-		roleId: text("role_id")
-			.notNull()
-			.references(() => roleDefinition.id, { onDelete: "cascade" }),
-		permission: text("permission", {
-			enum: ["manage_users", "view_audit", "manage_roles", "manage_api_keys"],
-		}).notNull(),
-		createdAt: timestamp("created_at", {
-			precision: 6,
-			withTimezone: true,
-		})
-			.defaultNow()
-			.notNull(),
-	},
-	(table) => [
-		index("role_permission_role_id_idx").on(table.roleId),
-		index("role_permission_permission_idx").on(table.permission),
-	],
-);
 
 export const session = pgTable(
 	"session",
@@ -77,50 +34,19 @@ export const session = pgTable(
 		id: text("id").primaryKey(),
 		expiresAt: timestamp("expires_at").notNull(),
 		token: text("token").notNull().unique(),
+		deviceId: text("device_id"),
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 		updatedAt: timestamp("updated_at")
 			.$onUpdate(() => /* @__PURE__ */ new Date())
 			.notNull(),
 		ipAddress: text("ip_address"),
 		userAgent: text("user_agent"),
-		deviceId: text("device_id"),
-		impersonatedBy: text("impersonated_by"),
 		userId: text("user_id")
 			.notNull()
 			.references(() => user.id, { onDelete: "cascade" }),
+		impersonatedBy: text("impersonated_by"),
 	},
 	(table) => [index("session_userId_idx").on(table.userId)],
-);
-
-export const serverLog = pgTable(
-	"server_log",
-	{
-		id: text("id").primaryKey(),
-		level: text("level").notNull(),
-		scope: text("scope").notNull(),
-		message: text("message").notNull(),
-		requestId: text("request_id"),
-		method: text("method"),
-		path: text("path"),
-		statusCode: integer("status_code"),
-		durationMs: integer("duration_ms"),
-		ipAddress: text("ip_address"),
-		userAgent: text("user_agent"),
-		userId: text("user_id"),
-		errorName: text("error_name"),
-		errorMessage: text("error_message"),
-		errorStack: text("error_stack"),
-		createdAt: timestamp("created_at", {
-			precision: 6,
-			withTimezone: true,
-		})
-			.defaultNow()
-			.notNull(),
-	},
-	(table) => [
-		index("server_log_created_at_idx").on(table.createdAt),
-		index("server_log_level_idx").on(table.level),
-	],
 );
 
 export const account = pgTable(
@@ -163,39 +89,38 @@ export const verification = pgTable(
 	(table) => [index("verification_identifier_idx").on(table.identifier)],
 );
 
-export const apikey = pgTable("apikey", {
-	id: text("id").primaryKey().unique(),
-	configId: text("config_id").notNull(),
-	name: text("name"),
-	start: text("start"),
-	prefix: text("prefix"),
-	key: text("key").notNull(),
-	referenceId: text("reference_id").notNull(),
-	refillInterval: integer("refill_interval"),
-	refillAmount: integer("refill_amount"),
-	lastRefillAt: timestamp("last_refill_at", {
-		precision: 6,
-		withTimezone: true,
-	}),
-	enabled: boolean("enabled"),
-	rateLimitEnabled: boolean("rate_limit_enabled"),
-	rateLimitTimeWindow: integer("rate_limit_time_window"),
-	rateLimitMax: integer("rate_limit_max"),
-	requestCount: integer("request_count"),
-	remaining: integer("remaining"),
-	lastRequest: timestamp("last_request", { precision: 6, withTimezone: true }),
-	expiresAt: timestamp("expires_at", { precision: 6, withTimezone: true }),
-	createdAt: timestamp("created_at", {
-		precision: 6,
-		withTimezone: true,
-	}).notNull(),
-	updatedAt: timestamp("updated_at", {
-		precision: 6,
-		withTimezone: true,
-	}).notNull(),
-	permissions: text("permissions"),
-	metadata: text("metadata"),
-});
+export const apikey = pgTable(
+	"apikey",
+	{
+		id: text("id").primaryKey(),
+		configId: text("config_id").default("default").notNull(),
+		name: text("name"),
+		start: text("start"),
+		referenceId: text("reference_id").notNull(),
+		prefix: text("prefix"),
+		key: text("key").notNull(),
+		refillInterval: integer("refill_interval"),
+		refillAmount: integer("refill_amount"),
+		lastRefillAt: timestamp("last_refill_at"),
+		enabled: boolean("enabled").default(true),
+		rateLimitEnabled: boolean("rate_limit_enabled").default(true),
+		rateLimitTimeWindow: integer("rate_limit_time_window").default(86400000),
+		rateLimitMax: integer("rate_limit_max").default(10),
+		requestCount: integer("request_count").default(0),
+		remaining: integer("remaining"),
+		lastRequest: timestamp("last_request"),
+		expiresAt: timestamp("expires_at"),
+		createdAt: timestamp("created_at").notNull(),
+		updatedAt: timestamp("updated_at").notNull(),
+		permissions: text("permissions"),
+		metadata: text("metadata"),
+	},
+	(table) => [
+		index("apikey_configId_idx").on(table.configId),
+		index("apikey_referenceId_idx").on(table.referenceId),
+		index("apikey_key_idx").on(table.key),
+	],
+);
 
 export const userRelations = relations(user, ({ many }) => ({
 	sessions: many(session),
