@@ -460,7 +460,7 @@ function RouteComponent() {
 								<code className="rounded bg-muted px-1">admin</code> role. Grant
 								it via SQL or the{" "}
 								<Link
-									to="/dev/impersonate-user"
+									to="/dev/admin-playground"
 									className="font-medium text-foreground underline-offset-4 hover:underline"
 								>
 									Admin Playground

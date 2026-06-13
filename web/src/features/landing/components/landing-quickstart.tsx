@@ -64,7 +64,10 @@ export function LandingQuickstart() {
 								{index < requiredEnvVars.length - 1 ? ", " : ". "}
 							</span>
 						))}
-						Optional: <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-xs">PORT</code>{" "}
+						Optional:{" "}
+						<code className="rounded bg-muted px-1.5 py-0.5 font-mono text-xs">
+							PORT
+						</code>{" "}
 						(default 5678). See the{" "}
 						<a
 							href={README_URL}

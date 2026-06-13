@@ -599,7 +599,7 @@ function RouteComponent() {
 										</code>
 										. Grant roles in the{" "}
 										<Link
-											to="/dev/impersonate-user"
+											to="/dev/admin-playground"
 											className="font-medium text-foreground underline-offset-4 hover:underline"
 										>
 											Admin Playground
@@ -1221,7 +1221,7 @@ function RouteComponent() {
 									<li>
 										Use the key on the{" "}
 										<Link
-											to="/dev/table-apikey-integration"
+											to="/dev/table-api-playground"
 											className="font-medium text-foreground underline-offset-4 hover:underline"
 										>
 											Table API playground
@@ -1231,7 +1231,7 @@ function RouteComponent() {
 									<li>
 										Manage roles and impersonation in the{" "}
 										<Link
-											to="/dev/impersonate-user"
+											to="/dev/admin-playground"
 											className="font-medium text-foreground underline-offset-4 hover:underline"
 										>
 											Admin Playground
