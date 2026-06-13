@@ -136,10 +136,13 @@ pnpm build
 # Database operations (from packages/cli)
 pnpm --filter agentfabric db:push     # Push schema to DB
 pnpm --filter agentfabric db:generate # Generate migrations
-pnpm --filter agentfabric db:migrate  # Run migrations
+pnpm --filter agentfabric db:migrate  # Run migrations (or use agentfabric init)
 pnpm --filter agentfabric db:studio   # Open Drizzle Studio
 
-# Validate local setup before starting the runtime
+# First-time setup: preflight + apply migrations
+NODE_ENV=development agentfabric init --dotenv
+
+# Validate full readiness before starting the runtime
 agentfabric doctor
 NODE_ENV=development agentfabric doctor --dotenv
 agentfabric doctor --json --strict

@@ -29,7 +29,7 @@ function getJournalPaths(): string[] {
 	];
 }
 
-function getMigrationsDirectory(): string {
+export function getMigrationsDirectory(): string {
 	return join(getPackageRoot(), "migrations");
 }
 

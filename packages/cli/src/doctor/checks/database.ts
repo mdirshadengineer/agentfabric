@@ -14,7 +14,7 @@ function isDatabaseUrlSet(): boolean {
 	return value !== undefined && value.trim().length > 0;
 }
 
-export async function runDatabaseChecks(): Promise<DoctorGroup> {
+export async function runDatabaseConnectivityCheck(): Promise<DoctorGroup> {
 	if (!isDatabaseUrlSet()) {
 		return createGroup("database", "Database", [
 			createCheck(
@@ -27,11 +27,10 @@ export async function runDatabaseChecks(): Promise<DoctorGroup> {
 	}
 
 	const connectionString = process.env.DATABASE_URL as string;
-	const checks = [];
-
 	const connection = await probeDatabaseConnection(connectionString);
+
 	if (!connection.ok) {
-		checks.push(
+		return createGroup("database", "Database", [
 			createCheck(
 				"postgres-connection",
 				"PostgreSQL connection",
@@ -39,19 +38,31 @@ export async function runDatabaseChecks(): Promise<DoctorGroup> {
 				connection.error,
 				"Verify DATABASE_URL and that PostgreSQL is running",
 			),
-		);
-
-		return createGroup("database", "Database", checks);
+		]);
 	}
 
-	checks.push(
+	return createGroup("database", "Database", [
 		createCheck(
 			"postgres-connection",
 			"PostgreSQL connection",
 			"pass",
 			"connected",
 		),
-	);
+	]);
+}
+
+export async function runDatabaseChecks(): Promise<DoctorGroup> {
+	const connectivityGroup = await runDatabaseConnectivityCheck();
+	const checks = [...connectivityGroup.checks];
+
+	const connectionFailed = checks.some((check) => check.status === "fail");
+	const connectionSkipped = checks.some((check) => check.id === "database-skipped");
+
+	if (connectionFailed || connectionSkipped) {
+		return connectivityGroup;
+	}
+
+	const connectionString = process.env.DATABASE_URL as string;
 
 	const migrations = await fetchAppliedMigrationHashes(connectionString);
 	if (!migrations.ok) {

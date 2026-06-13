@@ -12,7 +12,8 @@ See README.md for the full overview, tech stack, environment variables, and deve
 ## What's Implemented (Current State)
 
 ### CLI & Runtime
-- Command dispatch with lifecycle hooks: `start` (foreground and `--detach`), `status`, `stop`, `doctor`
+- Command dispatch with lifecycle hooks: `start` (foreground and `--detach`), `status`, `stop`, `doctor`, `init` (alias `initialize`)
+- `init` — first-time setup: doctor preflight (mandatory env + DB connectivity) then apply Drizzle migrations
 - `doctor` — preflight checks for env vars, PostgreSQL, migrations, schema tables, and build artifacts; human or JSON report
 - Detached process store at `~/.agentfabric/processes.json` with atomic writes
 - Runtime service container: starts services sequentially, stops in reverse on failure

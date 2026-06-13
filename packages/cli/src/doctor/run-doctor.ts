@@ -1,5 +1,8 @@
 import { runArtifactChecks } from "./checks/artifacts.js";
-import { runDatabaseChecks } from "./checks/database.js";
+import {
+	runDatabaseChecks,
+	runDatabaseConnectivityCheck,
+} from "./checks/database.js";
 import { runEnvironmentChecks } from "./checks/environment.js";
 import { runRuntimeChecks } from "./checks/runtime.js";
 import {
@@ -19,6 +22,19 @@ export async function runDoctor(): Promise<DoctorReport> {
 		runEnvironmentChecks(),
 		await runDatabaseChecks(),
 		await runArtifactChecks(),
+	];
+
+	return {
+		groups,
+		summary: summarizeChecks(groups),
+	};
+}
+
+export async function runDoctorPreflight(): Promise<DoctorReport> {
+	const groups = [
+		runRuntimeChecks(),
+		runEnvironmentChecks(),
+		await runDatabaseConnectivityCheck(),
 	];
 
 	return {

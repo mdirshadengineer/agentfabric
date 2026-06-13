@@ -54,7 +54,7 @@ function shouldEnableDbSsl(): boolean {
 	return isProduction;
 }
 
-function createProbeClient(connectionString: string) {
+export function createProbeClient(connectionString: string) {
 	return postgres(connectionString, {
 		prepare: false,
 		max: DEFAULT_DB_POOL_SIZE,

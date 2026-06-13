@@ -12,8 +12,11 @@ export function renderJsonReport(report: DoctorReport): string {
 	return JSON.stringify(report, null, 2);
 }
 
-export function renderHumanReport(report: DoctorReport): string {
-	const lines: string[] = ["AgentFabric Doctor", ""];
+export function renderHumanReport(
+	report: DoctorReport,
+	title = "AgentFabric Doctor",
+): string {
+	const lines: string[] = [title, ""];
 
 	for (const group of report.groups) {
 		if (group.checks.length === 0) {

@@ -355,9 +355,67 @@ agentfabric stop --id <name>
 
 ---
 
+## Init
+
+Initialize a new AgentFabric installation. Runs mandatory preflight checks (runtime, required env vars, PostgreSQL connectivity), then applies pending Drizzle migrations. Use this on first setup before `agentfabric doctor` and `agentfabric start`.
+
+```bash
+agentfabric init
+agentfabric initialize
+agentfabric init --json
+NODE_ENV=development agentfabric init --dotenv
+```
+
+| Flag | Description |
+|------|-------------|
+| `--json` | Output preflight report and migration result as JSON |
+| `--dotenv` | Load `.env` from the current directory (development only; rejected in production) |
+
+Exit code `1` when preflight fails or migrations cannot be applied.
+
+### Preflight vs full doctor
+
+`init` uses a **preflight subset** of doctor checks — it validates mandatory readiness but intentionally skips migration and schema-table checks (since `init` applies migrations). Artifact checks (built UI, Vite dev server) are also excluded.
+
+After `init` succeeds, run full `agentfabric doctor` to verify migrations, schema tables, and artifacts before starting.
+
+### Example output
+
+```text
+AgentFabric Init — Preflight
+
+Runtime
+  ✓ Node.js — v24.15.0 (requires >=24)
+  ✓ agentfabric — 0.0.2
+
+Environment
+  ✓ DATABASE_URL — set
+  ✓ BETTER_AUTH_SECRET — set
+  ✓ BETTER_AUTH_BASE_URL — http://localhost:5678
+
+Database
+  ✓ PostgreSQL connection — connected
+
+Summary: 5 passed
+
+Initialization complete. Applied 6 migration(s).
+
+Next steps:
+  agentfabric doctor
+  agentfabric start
+```
+
+### Implementation notes
+
+- Init code lives under `src/init/` and reuses doctor preflight via `runDoctorPreflight()`.
+- Migrations are applied with `drizzle-orm/postgres-js/migrator` using an isolated `postgres` client (same pattern as doctor probes).
+- SQL migration files ship in the published npm package under `migrations/`.
+
+---
+
 ## Doctor
 
-Inspect configuration readiness before starting the runtime. Use this command after setting environment variables and applying database migrations, but before `agentfabric start`.
+Inspect configuration readiness before starting the runtime. Use this command after `agentfabric init` (or after manually applying database migrations), but before `agentfabric start`.
 
 ```bash
 agentfabric doctor
