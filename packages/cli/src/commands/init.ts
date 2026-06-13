@@ -75,10 +75,7 @@ class Init extends CommandLifecycle<InitCommandFlags> {
 			);
 		} else {
 			console.log(
-				renderHumanReport(
-					result.preflight,
-					"AgentFabric Init — Preflight",
-				),
+				renderHumanReport(result.preflight, "AgentFabric Init — Preflight"),
 			);
 		}
 

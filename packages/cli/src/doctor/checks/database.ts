@@ -56,7 +56,9 @@ export async function runDatabaseChecks(): Promise<DoctorGroup> {
 	const checks = [...connectivityGroup.checks];
 
 	const connectionFailed = checks.some((check) => check.status === "fail");
-	const connectionSkipped = checks.some((check) => check.id === "database-skipped");
+	const connectionSkipped = checks.some(
+		(check) => check.id === "database-skipped",
+	);
 
 	if (connectionFailed || connectionSkipped) {
 		return connectivityGroup;

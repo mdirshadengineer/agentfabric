@@ -20,6 +20,7 @@
  *  8. Conditional dotenv Loading
  *  9. IPv4 Preference & Happy Eyeballs Opt-out
  * 10. Async IIFE with Dynamic Imports
+ * 11. Bootstrap Preflight (doctor + auto-init migrations)
  */
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -243,11 +244,31 @@ require("node:net").setDefaultAutoSelectFamily?.(false);
 //   Node printing a DeprecationWarning and potentially continuing in a broken state.
 // ─────────────────────────────────────────────────────────────────────────────
 (async () => {
-	// Boot the DI container and resolve + discover the CLI command.
-	const { container: Container } = await import("tsyringe");
-	const { CommandDiscovery } = await import(
+	const entryModule = await import(
 		pathToFileURL(path.join(__dirname, "..", "dist", "index.js")).href
 	);
+	const {
+		CommandDiscovery,
+		runBootstrapPreflight,
+		shouldRunBootstrapPreflight,
+	} = entryModule;
+
+	// ─────────────────────────────────────────────────────────────────────────
+	// 11. BOOTSTRAP PREFLIGHT
+	//
+	// WHY: Before `start`, verify env/DB readiness and hold startup when this
+	//      CLI version ships new migration files. The user must approve apply
+	//      interactively (yes/no) before the server process begins.
+	// ─────────────────────────────────────────────────────────────────────────
+	if (shouldRunBootstrapPreflight(process.argv[2])) {
+		const preflightExitCode = await runBootstrapPreflight();
+		if (preflightExitCode !== 0) {
+			process.exit(preflightExitCode);
+		}
+	}
+
+	// Boot the DI container and resolve + discover the CLI command.
+	const { container: Container } = await import("tsyringe");
 	await Container.resolve(CommandDiscovery).discover();
 })().catch((error) => {
 	// Use process.stderr directly — avoids any custom logger that might itself fail.

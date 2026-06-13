@@ -14,20 +14,49 @@ export type ApplyMigrationsResult =
 	| { ok: true; applied: number }
 	| { ok: false; error: string };
 
+export async function getPendingMigrations(): Promise<
+	{ ok: true; pending: number; tags: string[] } | { ok: false; error: string }
+> {
+	const connectionString = process.env.DATABASE_URL?.trim();
+	if (!connectionString) {
+		return { ok: false, error: "DATABASE_URL is not set" };
+	}
+
+	const applied = await fetchAppliedMigrationHashes(connectionString);
+	if (!applied.ok) {
+		return { ok: false, error: applied.error };
+	}
+
+	const tags = getPendingMigrationTags(applied.hashes, applied.tableExists);
+
+	return {
+		ok: true,
+		pending: tags.length,
+		tags,
+	};
+}
+
+function getPendingMigrationTags(
+	hashes: readonly string[],
+	tableExists: boolean,
+): string[] {
+	const journal = loadMigrationJournal();
+	if (!journal) {
+		return [];
+	}
+
+	if (!tableExists) {
+		return journal.entries.map((entry) => entry.tag);
+	}
+
+	return compareMigrations(hashes).pendingTags;
+}
+
 function countPendingMigrations(
 	hashes: readonly string[],
 	tableExists: boolean,
 ): number {
-	const journal = loadMigrationJournal();
-	if (!journal) {
-		return 0;
-	}
-
-	if (!tableExists) {
-		return journal.entries.length;
-	}
-
-	return compareMigrations(hashes).pendingTags.length;
+	return getPendingMigrationTags(hashes, tableExists).length;
 }
 
 export async function applyMigrations(): Promise<ApplyMigrationsResult> {
