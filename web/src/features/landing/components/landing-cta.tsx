@@ -71,7 +71,7 @@ export function LandingCta() {
 						))}
 					</ul>
 
-					<div className="flex w-full flex-col gap-2 sm:w-auto sm:min-w-[12rem]">
+					<div className="flex w-full flex-col gap-2 sm:w-auto sm:min-w-48">
 						<Button asChild size="lg" className="w-full sm:w-auto">
 							<Link to="/signup">Create account</Link>
 						</Button>
