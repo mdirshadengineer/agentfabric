@@ -4,8 +4,8 @@ import {
 } from "../doctor/run-doctor.js";
 import type { DoctorReport } from "../doctor/types.js";
 import {
-	applyMigrations,
 	type ApplyMigrationsResult,
+	applyMigrations,
 } from "./apply-migrations.js";
 
 export interface InitResult {

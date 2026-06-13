@@ -1,4 +1,3 @@
-import { confirmMigrationApply } from "./confirm-migration-apply.js";
 import { renderHumanReport } from "../doctor/report.js";
 import {
 	runDoctorPreflight,
@@ -9,6 +8,7 @@ import {
 	applyMigrations,
 	getPendingMigrations,
 } from "../init/apply-migrations.js";
+import { confirmMigrationApply } from "./confirm-migration-apply.js";
 
 export function shouldRunBootstrapPreflight(
 	commandName: string | undefined,
