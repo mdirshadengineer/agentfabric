@@ -1,113 +1,155 @@
 import { IconAlertCircle, IconFolders, IconPlus } from "@tabler/icons-react"
-import { createFileRoute, useNavigate } from "@tanstack/react-router"
-import { useState } from "react"
-import { Badge } from "@/components/ui/badge"
+import { createFileRoute } from "@tanstack/react-router"
+import { useMemo, useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
 import {
 	Empty,
 	EmptyDescription,
 	EmptyMedia,
 	EmptyTitle,
 } from "@/components/ui/empty"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Skeleton } from "@/components/ui/skeleton"
-import { CreateWorkspaceDialog } from "@/features/workspace/components/create-workspace-dialog"
+import {
+	WorkspaceCard,
+	WorkspaceCardSkeleton,
+} from "@/features/workspace/components/workspace-card"
+import {
+	WorkspaceListToolbar,
+	WorkspaceListToolbarSkeleton,
+	type WorkspaceSort,
+} from "@/features/workspace/components/workspace-list-toolbar"
 import { useWorkspaces } from "@/features/workspace/queries/workspaces"
+import type { Workspace } from "@/features/workspace/types"
 
 export const Route = createFileRoute("/_auth/workspace/")({
 	component: RouteComponent,
 })
 
+function sortWorkspaces(workspaces: Workspace[], sort: WorkspaceSort) {
+	const sorted = [...workspaces]
+
+	switch (sort) {
+		case "name-asc":
+			return sorted.sort((a, b) => a.name.localeCompare(b.name))
+		case "name-desc":
+			return sorted.sort((a, b) => b.name.localeCompare(a.name))
+		case "newest":
+			return sorted.sort(
+				(a, b) =>
+					new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+			)
+		case "oldest":
+			return sorted.sort(
+				(a, b) =>
+					new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+			)
+		default:
+			return sorted
+	}
+}
+
+function filterWorkspaces(workspaces: Workspace[], search: string) {
+	const query = search.trim().toLowerCase()
+	if (!query) return workspaces
+
+	return workspaces.filter(
+		(ws) =>
+			ws.name.toLowerCase().includes(query) ||
+			ws.slug.toLowerCase().includes(query)
+	)
+}
+
 function RouteComponent() {
 	const { data: workspaces, isLoading, isError, error } = useWorkspaces()
 	const [showCreate, setShowCreate] = useState(false)
-	const navigate = useNavigate()
+	const [search, setSearch] = useState("")
+	const [sort, setSort] = useState<WorkspaceSort>("name-asc")
+
+	const workspaceList = workspaces ?? []
+
+	const filteredWorkspaces = useMemo(
+		() => sortWorkspaces(filterWorkspaces(workspaceList, search), sort),
+		[workspaceList, search, sort]
+	)
 
 	if (isError) {
 		return (
-			<Empty>
-				<EmptyMedia>
-					<IconAlertCircle className="size-12 text-destructive" />
-				</EmptyMedia>
-				<EmptyTitle>Failed to load workspaces</EmptyTitle>
-				<EmptyDescription>
-					{error instanceof Error
-						? error.message
-						: "An unexpected error occurred"}
-				</EmptyDescription>
-			</Empty>
+			<div className="px-6 py-8">
+				<Empty>
+					<EmptyMedia>
+						<IconAlertCircle className="size-12 text-destructive" />
+					</EmptyMedia>
+					<EmptyTitle>Failed to load workspaces</EmptyTitle>
+					<EmptyDescription>
+						{error instanceof Error
+							? error.message
+							: "An unexpected error occurred"}
+					</EmptyDescription>
+				</Empty>
+			</div>
 		)
 	}
 
 	if (isLoading) {
 		return (
-			<div className="p-6 space-y-4 max-w-2xl mx-auto w-full">
-				<div className="flex items-center justify-between">
-					<Skeleton className="h-7 w-32" />
-					<Skeleton className="h-9 w-36" />
+			<div className="flex h-full flex-col px-6 py-8">
+				<WorkspaceListToolbarSkeleton />
+				<div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+					{Array.from({ length: 6 }).map((_, i) => (
+						<WorkspaceCardSkeleton key={i} />
+					))}
 				</div>
-				{[1, 2, 3].map((i) => (
-					<Skeleton key={i} className="h-16 w-full" />
-				))}
 			</div>
 		)
 	}
 
-	const workspaceList = workspaces ?? []
-
 	return (
-		<div className="p-6 max-w-2xl mx-auto w-full h-full flex flex-col">
-			<div className="flex items-center justify-between mb-6 shrink-0">
-				<h1 className="text-xl font-semibold">Workspaces</h1>
-				<CreateWorkspaceDialog open={showCreate} onOpenChange={setShowCreate} />
-			</div>
+		<div className="flex h-full flex-col px-6 py-8">
+			<WorkspaceListToolbar
+				search={search}
+				onSearchChange={setSearch}
+				sort={sort}
+				onSortChange={setSort}
+				showCreate={showCreate}
+				onShowCreateChange={setShowCreate}
+			/>
 
 			{workspaceList.length === 0 ? (
-				<Empty>
-					<EmptyMedia>
-						<IconFolders className="size-12 text-muted-foreground" />
-					</EmptyMedia>
-					<EmptyTitle>No workspaces yet</EmptyTitle>
-					<EmptyDescription>
-						Create your first workspace to start collaborating
-					</EmptyDescription>
-					<Button onClick={() => setShowCreate(true)} size="sm">
-						<IconPlus className="size-4 mr-2" />
-						Create Workspace
-					</Button>
-				</Empty>
+				<div className="flex flex-1 items-center justify-center py-12">
+					<Empty>
+						<EmptyMedia>
+							<IconFolders className="size-12 text-muted-foreground" />
+						</EmptyMedia>
+						<EmptyTitle>No workspaces yet</EmptyTitle>
+						<EmptyDescription>
+							Create your first workspace to start collaborating
+						</EmptyDescription>
+						<Button onClick={() => setShowCreate(true)} size="sm">
+							<IconPlus className="size-4 mr-2" />
+							Create Workspace
+						</Button>
+					</Empty>
+				</div>
+			) : filteredWorkspaces.length === 0 ? (
+				<div className="flex flex-1 items-center justify-center py-12">
+					<Empty>
+						<EmptyMedia>
+							<IconFolders className="size-12 text-muted-foreground" />
+						</EmptyMedia>
+						<EmptyTitle>No workspaces found</EmptyTitle>
+						<EmptyDescription>
+							Try adjusting your search to find what you are looking for
+						</EmptyDescription>
+						<Button variant="outline" onClick={() => setSearch("")} size="sm">
+							Clear search
+						</Button>
+					</Empty>
+				</div>
 			) : (
-				<ScrollArea className="flex-1">
-					<div className="space-y-3">
-						{workspaceList.map((ws) => (
-							<Card
-								key={ws.id}
-								className="p-4 hover:bg-accent/50 cursor-pointer transition-colors"
-								onClick={() =>
-									navigate({
-										to: "/workspace/$workspaceId",
-										params: { workspaceId: ws.id },
-									})
-								}
-							>
-								<div className="flex items-center gap-3">
-									<div className="size-8 rounded-md bg-primary/10 flex items-center justify-center shrink-0">
-										<span className="text-sm font-semibold text-primary">
-											{ws.name.charAt(0).toUpperCase()}
-										</span>
-									</div>
-									<div className="min-w-0">
-										<h3 className="font-medium truncate">{ws.name}</h3>
-										<Badge variant="secondary" className="text-[10px] py-0 h-4">
-											{ws.slug}
-										</Badge>
-									</div>
-								</div>
-							</Card>
-						))}
-					</div>
-				</ScrollArea>
+				<div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+					{filteredWorkspaces.map((ws) => (
+						<WorkspaceCard key={ws.id} workspace={ws} />
+					))}
+				</div>
 			)}
 		</div>
 	)

@@ -16,13 +16,19 @@ import { Label } from "@/components/ui/label"
 import { useCreateWorkspace } from "@/features/workspace/queries/workspace-mutations"
 import { createWorkspaceSchema } from "@/features/workspace/schemas"
 
+type CreateWorkspaceDialogProps = {
+	open: boolean
+	onOpenChange: (open: boolean) => void
+	showTrigger?: boolean
+	triggerLabel?: string
+}
+
 export function CreateWorkspaceDialog({
 	open,
 	onOpenChange,
-}: {
-	open: boolean
-	onOpenChange: (open: boolean) => void
-}) {
+	showTrigger = true,
+	triggerLabel = "New Workspace",
+}: CreateWorkspaceDialogProps) {
 	const [name, setName] = useState("")
 	const [fieldError, setFieldError] = useState<string | null>(null)
 	const createWorkspace = useCreateWorkspace()
@@ -46,58 +52,58 @@ export function CreateWorkspaceDialog({
 	}
 
 	return (
-		<>
-			<Dialog open={open} onOpenChange={onOpenChange}>
+		<Dialog open={open} onOpenChange={onOpenChange}>
+			{showTrigger ? (
 				<DialogTrigger asChild>
 					<Button size="sm">
 						<IconPlus className="size-4 mr-2" />
-						New Workspace
+						{triggerLabel}
 					</Button>
 				</DialogTrigger>
-				<DialogContent>
-					<DialogHeader>
-						<DialogTitle>Create Workspace</DialogTitle>
-						<DialogDescription>
-							Create a new workspace to organize agents and collaborate.
-						</DialogDescription>
-					</DialogHeader>
-					<div className="space-y-4 py-4">
-						<div className="space-y-2">
-							<Label htmlFor="name">Workspace Name</Label>
-							<Input
-								id="name"
-								value={name}
-								onChange={(e) => {
-									setName(e.target.value)
-									setFieldError(null)
-								}}
-								placeholder="My Workspace"
-							/>
-							{fieldError ? (
-								<p className="text-sm text-destructive">{fieldError}</p>
-							) : null}
-							{createWorkspace.isError ? (
-								<p className="text-sm text-destructive">
-									{createWorkspace.error instanceof Error
-										? createWorkspace.error.message
-										: "Failed to create workspace"}
-								</p>
-							) : null}
-						</div>
+			) : null}
+			<DialogContent>
+				<DialogHeader>
+					<DialogTitle>Create Workspace</DialogTitle>
+					<DialogDescription>
+						Create a new workspace to organize agents and collaborate.
+					</DialogDescription>
+				</DialogHeader>
+				<div className="space-y-4 py-4">
+					<div className="space-y-2">
+						<Label htmlFor="name">Workspace Name</Label>
+						<Input
+							id="name"
+							value={name}
+							onChange={(e) => {
+								setName(e.target.value)
+								setFieldError(null)
+							}}
+							placeholder="My Workspace"
+						/>
+						{fieldError ? (
+							<p className="text-sm text-destructive">{fieldError}</p>
+						) : null}
+						{createWorkspace.isError ? (
+							<p className="text-sm text-destructive">
+								{createWorkspace.error instanceof Error
+									? createWorkspace.error.message
+									: "Failed to create workspace"}
+							</p>
+						) : null}
 					</div>
-					<DialogFooter>
-						<Button variant="outline" onClick={() => onOpenChange(false)}>
-							Cancel
-						</Button>
-						<Button
-							onClick={handleSubmit}
-							disabled={createWorkspace.isPending || !name.trim()}
-						>
-							{createWorkspace.isPending ? "Creating..." : "Create"}
-						</Button>
-					</DialogFooter>
-				</DialogContent>
-			</Dialog>
-		</>
+				</div>
+				<DialogFooter>
+					<Button variant="outline" onClick={() => onOpenChange(false)}>
+						Cancel
+					</Button>
+					<Button
+						onClick={handleSubmit}
+						disabled={createWorkspace.isPending || !name.trim()}
+					>
+						{createWorkspace.isPending ? "Creating..." : "Create"}
+					</Button>
+				</DialogFooter>
+			</DialogContent>
+		</Dialog>
 	)
 }

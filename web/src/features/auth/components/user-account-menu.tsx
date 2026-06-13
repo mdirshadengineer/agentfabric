@@ -18,7 +18,7 @@ import { useSignOut } from "@/features/auth/queries/mutations"
 import { getUserInitials } from "@/lib/user-display"
 import { cn } from "@/lib/utils"
 
-type UserAccountMenuUser = {
+export type UserAccountMenuUser = {
 	name?: string | null
 	email?: string | null
 	image?: string | null
