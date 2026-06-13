@@ -401,10 +401,17 @@ id: "default"
 
 ## Observability
 
-* File-based logs
-* SQLite-backed logs & history
+Implemented today:
+
 * Fastify uses Pino for server logs, with `pino-pretty` in development and structured JSON in production
-* HTTP request and error logs are persisted to Postgres in `server_log`, which can be queried from Grafana
+* Prometheus metrics at `/metrics` — HTTP request counts, durations, and response/error counters (`agentfabric_log_entries_total`)
+* Health check at `/health`
+
+Future enhancements:
+
+* File-based log rotation
+* SQLite-backed log history
+* Grafana dashboard templates
 
 ## Reliability
 

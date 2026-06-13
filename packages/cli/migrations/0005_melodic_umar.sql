@@ -29,10 +29,8 @@ CREATE TABLE "workspace_member" (
 --> statement-breakpoint
 ALTER TABLE "role_definition" DISABLE ROW LEVEL SECURITY;--> statement-breakpoint
 ALTER TABLE "role_permission" DISABLE ROW LEVEL SECURITY;--> statement-breakpoint
-ALTER TABLE "server_log" DISABLE ROW LEVEL SECURITY;--> statement-breakpoint
 DROP TABLE "role_definition" CASCADE;--> statement-breakpoint
 DROP TABLE "role_permission" CASCADE;--> statement-breakpoint
-DROP TABLE "server_log" CASCADE;--> statement-breakpoint
 ALTER TABLE "apikey" DROP CONSTRAINT "apikey_id_unique";--> statement-breakpoint
 ALTER TABLE "apikey" ALTER COLUMN "config_id" SET DEFAULT 'default';--> statement-breakpoint
 ALTER TABLE "apikey" ALTER COLUMN "last_refill_at" SET DATA TYPE timestamp;--> statement-breakpoint

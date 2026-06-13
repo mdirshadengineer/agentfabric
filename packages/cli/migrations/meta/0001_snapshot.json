@@ -110,8 +110,12 @@
 					"name": "account_user_id_user_id_fk",
 					"tableFrom": "account",
 					"tableTo": "user",
-					"columnsFrom": ["user_id"],
-					"columnsTo": ["id"],
+					"columnsFrom": [
+						"user_id"
+					],
+					"columnsTo": [
+						"id"
+					],
 					"onDelete": "cascade",
 					"onUpdate": "no action"
 				}
@@ -266,7 +270,9 @@
 				"apikey_id_unique": {
 					"name": "apikey_id_unique",
 					"nullsNotDistinct": false,
-					"columns": ["id"]
+					"columns": [
+						"id"
+					]
 				}
 			},
 			"policies": {},
@@ -333,7 +339,9 @@
 				"role_definition_name_unique": {
 					"name": "role_definition_name_unique",
 					"nullsNotDistinct": false,
-					"columns": ["name"]
+					"columns": [
+						"name"
+					]
 				}
 			},
 			"policies": {},
@@ -407,153 +415,16 @@
 					"name": "role_permission_role_id_role_definition_id_fk",
 					"tableFrom": "role_permission",
 					"tableTo": "role_definition",
-					"columnsFrom": ["role_id"],
-					"columnsTo": ["id"],
+					"columnsFrom": [
+						"role_id"
+					],
+					"columnsTo": [
+						"id"
+					],
 					"onDelete": "cascade",
 					"onUpdate": "no action"
 				}
 			},
-			"compositePrimaryKeys": {},
-			"uniqueConstraints": {},
-			"policies": {},
-			"checkConstraints": {},
-			"isRLSEnabled": false
-		},
-		"public.server_log": {
-			"name": "server_log",
-			"schema": "",
-			"columns": {
-				"id": {
-					"name": "id",
-					"type": "text",
-					"primaryKey": true,
-					"notNull": true
-				},
-				"level": {
-					"name": "level",
-					"type": "text",
-					"primaryKey": false,
-					"notNull": true
-				},
-				"scope": {
-					"name": "scope",
-					"type": "text",
-					"primaryKey": false,
-					"notNull": true
-				},
-				"message": {
-					"name": "message",
-					"type": "text",
-					"primaryKey": false,
-					"notNull": true
-				},
-				"request_id": {
-					"name": "request_id",
-					"type": "text",
-					"primaryKey": false,
-					"notNull": false
-				},
-				"method": {
-					"name": "method",
-					"type": "text",
-					"primaryKey": false,
-					"notNull": false
-				},
-				"path": {
-					"name": "path",
-					"type": "text",
-					"primaryKey": false,
-					"notNull": false
-				},
-				"status_code": {
-					"name": "status_code",
-					"type": "integer",
-					"primaryKey": false,
-					"notNull": false
-				},
-				"duration_ms": {
-					"name": "duration_ms",
-					"type": "integer",
-					"primaryKey": false,
-					"notNull": false
-				},
-				"ip_address": {
-					"name": "ip_address",
-					"type": "text",
-					"primaryKey": false,
-					"notNull": false
-				},
-				"user_agent": {
-					"name": "user_agent",
-					"type": "text",
-					"primaryKey": false,
-					"notNull": false
-				},
-				"user_id": {
-					"name": "user_id",
-					"type": "text",
-					"primaryKey": false,
-					"notNull": false
-				},
-				"error_name": {
-					"name": "error_name",
-					"type": "text",
-					"primaryKey": false,
-					"notNull": false
-				},
-				"error_message": {
-					"name": "error_message",
-					"type": "text",
-					"primaryKey": false,
-					"notNull": false
-				},
-				"error_stack": {
-					"name": "error_stack",
-					"type": "text",
-					"primaryKey": false,
-					"notNull": false
-				},
-				"created_at": {
-					"name": "created_at",
-					"type": "timestamp (6) with time zone",
-					"primaryKey": false,
-					"notNull": true,
-					"default": "now()"
-				}
-			},
-			"indexes": {
-				"server_log_created_at_idx": {
-					"name": "server_log_created_at_idx",
-					"columns": [
-						{
-							"expression": "created_at",
-							"isExpression": false,
-							"asc": true,
-							"nulls": "last"
-						}
-					],
-					"isUnique": false,
-					"concurrently": false,
-					"method": "btree",
-					"with": {}
-				},
-				"server_log_level_idx": {
-					"name": "server_log_level_idx",
-					"columns": [
-						{
-							"expression": "level",
-							"isExpression": false,
-							"asc": true,
-							"nulls": "last"
-						}
-					],
-					"isUnique": false,
-					"concurrently": false,
-					"method": "btree",
-					"with": {}
-				}
-			},
-			"foreignKeys": {},
 			"compositePrimaryKeys": {},
 			"uniqueConstraints": {},
 			"policies": {},
@@ -648,8 +519,12 @@
 					"name": "session_user_id_user_id_fk",
 					"tableFrom": "session",
 					"tableTo": "user",
-					"columnsFrom": ["user_id"],
-					"columnsTo": ["id"],
+					"columnsFrom": [
+						"user_id"
+					],
+					"columnsTo": [
+						"id"
+					],
 					"onDelete": "cascade",
 					"onUpdate": "no action"
 				}
@@ -659,7 +534,9 @@
 				"session_token_unique": {
 					"name": "session_token_unique",
 					"nullsNotDistinct": false,
-					"columns": ["token"]
+					"columns": [
+						"token"
+					]
 				}
 			},
 			"policies": {},
@@ -747,7 +624,9 @@
 				"user_email_unique": {
 					"name": "user_email_unique",
 					"nullsNotDistinct": false,
-					"columns": ["email"]
+					"columns": [
+						"email"
+					]
 				}
 			},
 			"policies": {},

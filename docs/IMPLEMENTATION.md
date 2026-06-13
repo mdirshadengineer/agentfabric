@@ -227,16 +227,14 @@ Non-API traffic is excluded via an `allowList` path filter. Routes under `/api` 
 
 ### Logging Plugin
 
-The logging plugin persists HTTP request and error logs to Postgres.
+The logging plugin tracks HTTP responses and errors for Prometheus counters. Fastify's built-in Pino logger handles request logging to stdout.
 
 Implemented behavior:
 
-- Records request start time.
-- Persists completed requests to the `server_log` table.
-- Persists route errors with error metadata and stack traces when available.
-- Includes method, path, status code, duration, IP address, user agent, request id, and user id when available.
-- Classifies status codes as `info`, `warn`, or `error`.
-- Increments Prometheus log counters after successful persistence.
+- Records request start time on `onRequest`.
+- On response, classifies status codes as `info`, `warn`, or `error` and increments `agentfabric_log_entries_total`.
+- On route errors, increments the Prometheus error counter for the `http` scope.
+- Production logs use structured JSON; development uses `pino-pretty`.
 
 ### Metrics Plugin
 
@@ -351,16 +349,11 @@ Implemented tables:
 - `account`: Better Auth account/provider credentials.
 - `verification`: Better Auth verification tokens.
 - `apikey`: Better Auth API key storage.
-- `role_definition`: custom role registry.
-- `role_permission`: permissions attached to custom roles.
-- `server_log`: persisted HTTP request and error logs.
+- `workspace`: workspace organizations (Better Auth organization plugin shape).
+- `workspace_member`: workspace membership and roles.
+- `invitation`: pending workspace invitations.
 
-Defined permissions:
-
-- `manage_users`
-- `view_audit`
-- `manage_roles`
-- `manage_api_keys`
+Admin authorization uses Better Auth admin plugin roles (`admin`, `user`) on `user.role`, enforced in management routes via `admin-access` helpers.
 
 ## API Routes
 
@@ -691,8 +684,8 @@ Typical local runtime flow:
 9. Authenticated workspace routes preload `GET /api/v1/management/me` and the workspace list query.
 10. The backend proxies auth requests to Better Auth.
 11. Session governance enforces or prunes sessions.
-12. Auth, API key, management, table, logging, and metrics data are persisted in Postgres.
+12. Auth, API key, management, workspace, and table data are persisted in Postgres; HTTP logs go to stdout and metrics are exposed at `/metrics`.
 
 ## Summary
 
-AgentFabric currently implements a strong foundation for a unified CLI, API server, authentication layer, session governance system, API key access, operational logging, metrics, database schema, and React web shell with TanStack Query–based data fetching, route-level auth guards, and management API preloading. The codebase is ready for the next layer of product implementation: real workspace APIs and UI wiring, agent/workflow orchestration, OAuth providers, richer admin screens, and production-ready documentation.
+AgentFabric currently implements a strong foundation for a unified CLI, API server, authentication layer, session governance system, API key access, Prometheus metrics, Fastify/Pino logging, database schema, and React web shell with TanStack Query–based data fetching, route-level auth guards, and management API preloading. The codebase is ready for the next layer of product implementation: deeper workspace UI wiring, agent/workflow orchestration, OAuth providers, richer admin screens, and production-ready documentation.

@@ -18,7 +18,7 @@ See README.md for the full overview, tech stack, environment variables, and deve
 - Only registered runtime service: Fastify API server
 
 ### API Server (Fastify, port 5678)
-- Plugins: database (Postgres pool), auth (Better Auth), rate-limit (`/api/*` only), logging (request/error to `server_log`), metrics (Prometheus via prom-client)
+- Plugins: database (Postgres pool), auth (Better Auth), rate-limit (`/api/*` only), logging (Fastify/Pino to stdout + Prometheus log counters), metrics (Prometheus via prom-client)
 - Frontend serving: Vite proxy in dev (`localhost:5173`), static SPA from `dist/ui` in production
 - Graceful shutdown on SIGINT/SIGTERM
 
@@ -31,8 +31,8 @@ See README.md for the full overview, tech stack, environment variables, and deve
 - API keys use `Authorization: Bearer` header (not Better Auth's default `x-api-key`)
 
 ### Database (PostgreSQL + Drizzle)
-- Tables: `user`, `session`, `account`, `verification`, `apikey` (Better Auth) + `role_definition`, `role_permission`, `server_log` (app-level)
-- Migrations in `packages/cli/migrations/` (4 migration files)
+- Tables: `user`, `session`, `account`, `verification`, `apikey` (Better Auth) + `workspace`, `workspace_member`, `invitation` (app-level)
+- Migrations in `packages/cli/migrations/` (6 migration files)
 - Configurable pool: `DB_IDLE_TIMEOUT`, `DB_CONNECT_TIMEOUT`, `DB_POOL_SIZE`, `DB_SSL`
 - Disabled named prepared statements for PgBouncer compatibility
 

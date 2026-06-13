@@ -29,7 +29,7 @@ const httpRequestDurationSeconds = new Histogram({
 
 const logEntriesTotal = new Counter({
 	name: "agentfabric_log_entries_total",
-	help: "Total number of server log entries persisted by level and scope",
+	help: "Total number of HTTP responses and errors counted by level and scope",
 	labelNames: ["level", "scope"],
 	registers: [register],
 });

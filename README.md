@@ -45,7 +45,7 @@ agentfabric/
 - Database plugin with PostgreSQL connection pooling
 - Better Auth plugin with email/password, admin, and API key support
 - Rate limiting on `/api/*` routes
-- HTTP request/error logging to `server_log` table
+- Fastify/Pino request logging to stdout (`pino-pretty` in dev, structured JSON in production)
 - Prometheus metrics at `/metrics` (`agentfabric_http_requests_total`, `agentfabric_http_request_duration_seconds`, `agentfabric_log_entries_total`)
 - Health endpoint at `/health`
 - Frontend serving: Vite proxy in dev, static SPA in production
@@ -60,7 +60,7 @@ agentfabric/
 
 ### Database Schema
 - Better Auth tables: `user`, `session`, `account`, `verification`, `apikey`
-- Application tables: `role_definition`, `role_permission`, `server_log`
+- Application tables: `workspace`, `workspace_member`, `invitation`
 - Drizzle migrations under `packages/cli/migrations/`
 
 ### API Routes
