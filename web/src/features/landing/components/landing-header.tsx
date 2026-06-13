@@ -1,5 +1,4 @@
 import { IconMenu2 } from "@tabler/icons-react"
-import { Link } from "@tanstack/react-router"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import {
@@ -9,6 +8,7 @@ import {
 	SheetTitle,
 	SheetTrigger,
 } from "@/components/ui/sheet"
+import { LandingAccountActions } from "@/features/landing/components/landing-account-actions"
 import { LandingNavMenu } from "@/features/landing/components/landing-nav-menu"
 import { navMenuGroups } from "@/features/landing/content"
 
@@ -37,17 +37,7 @@ export function LandingHeader() {
 				</div>
 
 				<div className="flex shrink-0 items-center gap-2">
-					<Button
-						asChild
-						variant="outline"
-						size="sm"
-						className="hidden sm:inline-flex"
-					>
-						<Link to="/signin">Sign in</Link>
-					</Button>
-					<Button asChild size="sm" className="hidden sm:inline-flex">
-						<Link to="/signup">Get started</Link>
-					</Button>
+					<LandingAccountActions layout="header" />
 
 					<Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
 						<SheetTrigger asChild>
@@ -101,23 +91,10 @@ export function LandingHeader() {
 									</div>
 								))}
 
-								<div className="space-y-2 border-t border-border pt-4">
-									<p className="text-sm font-semibold text-foreground">
-										Account
-									</p>
-									<div className="flex flex-col gap-2">
-										<Button asChild variant="outline" size="sm">
-											<Link to="/signin" onClick={() => setMobileOpen(false)}>
-												Sign in
-											</Link>
-										</Button>
-										<Button asChild size="sm">
-											<Link to="/signup" onClick={() => setMobileOpen(false)}>
-												Get started
-											</Link>
-										</Button>
-									</div>
-								</div>
+								<LandingAccountActions
+									layout="mobile"
+									onNavigate={() => setMobileOpen(false)}
+								/>
 							</nav>
 						</SheetContent>
 					</Sheet>

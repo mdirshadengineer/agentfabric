@@ -1,5 +1,6 @@
 // Global configuration for the agentfabric application.
-export const AGENTFABRIC_DEFAULT_COMMAND = "start";
+
+export const AGENTFABRIC_DEFAULT_COMMAND = "start"; // Default command to run when no command is provided
 
 export const AGENTFABRIC_API_SERVER_PORT = 5678; // Port for the API server
 

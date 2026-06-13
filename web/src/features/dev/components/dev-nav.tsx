@@ -17,12 +17,12 @@ const devTools = [
 		icon: IconKey,
 	},
 	{
-		to: "/dev/impersonate-user",
+		to: "/dev/admin-playground",
 		label: "Admin Playground",
 		icon: IconMask,
 	},
 	{
-		to: "/dev/table-apikey-integration",
+		to: "/dev/table-api-playground",
 		label: "Table API Playground",
 		icon: IconShieldLock,
 	},

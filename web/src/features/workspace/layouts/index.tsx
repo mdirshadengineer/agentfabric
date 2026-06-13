@@ -1,26 +1,8 @@
-import {
-	IconLayoutSidebar,
-	IconLogout,
-	IconMoon,
-	IconPlus,
-	IconSparkles,
-	IconSun,
-} from "@tabler/icons-react"
+import { IconLayoutSidebar, IconPlus } from "@tabler/icons-react"
 import { useQuery } from "@tanstack/react-query"
-import { Link, Outlet, useNavigate } from "@tanstack/react-router"
+import { Link, Outlet } from "@tanstack/react-router"
 import { useState } from "react"
 import { AlertBannerStackFromProvider } from "@/components/alert-banner-stack/alert-banner-stack"
-import { useTheme } from "@/components/theme-provider"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuLabel,
-	DropdownMenuSeparator,
-	DropdownMenuShortcut,
-	DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
 import {
 	Sidebar,
 	SidebarContent,
@@ -36,7 +18,7 @@ import {
 	SidebarSeparator,
 	SidebarTrigger,
 } from "@/components/ui/sidebar"
-import { useSignOut } from "@/features/auth/queries/mutations"
+import { UserAccountMenu } from "@/features/auth/components/user-account-menu"
 import { meQueryOptions } from "@/features/management/queries/me"
 import { CreateWorkspaceDialog } from "@/features/workspace/components/create-workspace-dialog"
 import { useWorkspaces } from "@/features/workspace/queries/workspaces"
@@ -46,27 +28,9 @@ export function WorkspaceLayout({
 }: Readonly<{ children: React.ReactNode }>) {
 	const { data: me } = useQuery(meQueryOptions)
 	const { data: workspaces } = useWorkspaces()
-	const signOut = useSignOut()
-	const navigate = useNavigate()
-	const { theme, setTheme } = useTheme()
 	const [showCreate, setShowCreate] = useState(false)
 
 	const user = me?.user
-	const initials = user?.name
-		?.split(" ")
-		.map((n) => n[0])
-		.join("")
-		.toUpperCase()
-		.slice(0, 2)
-
-	const handleSignOut = async () => {
-		try {
-			await signOut.mutateAsync()
-		} catch {
-			// navigate anyway
-		}
-		navigate({ to: "/signin" })
-	}
 
 	return (
 		<SidebarProvider>
@@ -76,9 +40,11 @@ export function WorkspaceLayout({
 						<SidebarMenuItem>
 							<SidebarMenuButton size="lg" asChild>
 								<Link to="/workspace">
-									<div className="flex size-8 items-center justify-center rounded-lg bg-linear-to-br from-teal-500 to-cyan-500 text-white">
-										<IconSparkles className="size-4" />
-									</div>
+									<img
+										src="/agentfabric.png"
+										alt="AgentFabric"
+										className="size-8 rounded-lg object-contain"
+									/>
 									<div className="flex flex-col gap-0.5 leading-none">
 										<span className="font-semibold">AgentFabric</span>
 									</div>
@@ -124,44 +90,7 @@ export function WorkspaceLayout({
 				<SidebarFooter>
 					<SidebarMenu>
 						<SidebarMenuItem>
-							<DropdownMenu>
-								<DropdownMenuTrigger asChild>
-									<SidebarMenuButton>
-										<Avatar size="sm">
-											<AvatarImage src={undefined} />
-											<AvatarFallback>{initials ?? "?"}</AvatarFallback>
-										</Avatar>
-										<span className="truncate">
-											{user?.name ?? user?.email ?? "User"}
-										</span>
-									</SidebarMenuButton>
-								</DropdownMenuTrigger>
-								<DropdownMenuContent
-									side="top"
-									className="w-[--radix-popper-anchor-width]"
-								>
-									<DropdownMenuLabel>{user?.email}</DropdownMenuLabel>
-									<DropdownMenuSeparator />
-									<DropdownMenuItem
-										onClick={() =>
-											setTheme(theme === "light" ? "dark" : "light")
-										}
-									>
-										{theme === "dark" ? (
-											<IconSun className="size-4" />
-										) : (
-											<IconMoon className="size-4" />
-										)}
-										Toggle theme
-										<DropdownMenuShortcut>D</DropdownMenuShortcut>
-									</DropdownMenuItem>
-									<DropdownMenuSeparator />
-									<DropdownMenuItem onClick={handleSignOut}>
-										<IconLogout className="size-4" />
-										Sign out
-									</DropdownMenuItem>
-								</DropdownMenuContent>
-							</DropdownMenu>
+							<UserAccountMenu user={user} variant="sidebar" />
 						</SidebarMenuItem>
 					</SidebarMenu>
 				</SidebarFooter>

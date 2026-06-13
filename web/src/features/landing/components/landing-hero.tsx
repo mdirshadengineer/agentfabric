@@ -1,7 +1,4 @@
-import { IconArrowRight, IconBrandGithub } from "@tabler/icons-react"
-import { Link } from "@tanstack/react-router"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
 import {
 	Card,
 	CardContent,
@@ -9,19 +6,27 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@/components/ui/card"
-import {
-	GITHUB_REPO_URL,
-	heroAtAGlance,
-	README_URL,
-} from "@/features/landing/content"
+import { LandingAccountActions } from "@/features/landing/components/landing-account-actions"
+import { heroAtAGlance } from "@/features/landing/content"
+import { useLandingAuth } from "@/features/landing/hooks/use-landing-auth"
+import { getUserFirstName } from "@/lib/user-display"
 
 export function LandingHero() {
+	const { isAuthenticated, isPending, user } = useLandingAuth()
+	const firstName = getUserFirstName(user?.name)
+
 	return (
 		<section className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-start">
 			<div className="space-y-5">
-				<Badge variant="secondary" className="w-fit">
-					Open-source framework
-				</Badge>
+				{!isPending && isAuthenticated ? (
+					<Badge variant="secondary" className="w-fit">
+						Signed in as {firstName}
+					</Badge>
+				) : (
+					<Badge variant="secondary" className="w-fit">
+						Open-source framework
+					</Badge>
+				)}
 				<h1 className="max-w-2xl text-4xl font-semibold tracking-tight sm:text-5xl">
 					Build, deploy, and manage AI agents — starting with the platform
 					foundation.
@@ -31,28 +36,7 @@ export function LandingHero() {
 					Fastify API server, PostgreSQL-backed auth, and a React control plane
 					— one artifact in production.
 				</p>
-				<div className="flex flex-wrap gap-3">
-					<Button asChild>
-						<Link to="/signup">Get started</Link>
-					</Button>
-					<Button asChild variant="outline">
-						<Link to="/signin">
-							Sign in
-							<IconArrowRight className="size-4" />
-						</Link>
-					</Button>
-					<Button asChild variant="outline">
-						<a href={GITHUB_REPO_URL} target="_blank" rel="noreferrer">
-							View on GitHub
-							<IconBrandGithub className="size-4" />
-						</a>
-					</Button>
-					<Button asChild variant="ghost">
-						<a href={README_URL} target="_blank" rel="noreferrer">
-							Read docs
-						</a>
-					</Button>
-				</div>
+				<LandingAccountActions layout="hero" />
 			</div>
 
 			<Card className="border-border/60 bg-card/80 py-0 shadow-sm backdrop-blur">

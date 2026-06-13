@@ -14,6 +14,9 @@ export const workspacesQueryOptions = queryOptions({
 	staleTime: 30_000,
 })
 
-export function useWorkspaces() {
-	return useQuery(workspacesQueryOptions)
+export function useWorkspaces(options?: { enabled?: boolean }) {
+	return useQuery({
+		...workspacesQueryOptions,
+		enabled: options?.enabled ?? true,
+	})
 }

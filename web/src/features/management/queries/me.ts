@@ -13,6 +13,9 @@ export const meQueryOptions = queryOptions({
 	staleTime: 30_000,
 })
 
-export function useMe() {
-	return useQuery(meQueryOptions)
+export function useMe(options?: { enabled?: boolean }) {
+	return useQuery({
+		...meQueryOptions,
+		enabled: options?.enabled ?? true,
+	})
 }

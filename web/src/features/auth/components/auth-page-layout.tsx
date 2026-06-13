@@ -1,8 +1,10 @@
 import {
 	IconBrandGithub,
 	IconBrandGoogle,
+	IconCircleCheck,
 	IconSparkles,
 } from "@tabler/icons-react"
+import { Link } from "@tanstack/react-router"
 import type { ReactNode } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -13,6 +15,8 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@/components/ui/card"
+import { Separator } from "@/components/ui/separator"
+import { cn } from "@/lib/utils"
 
 type AuthPageLayoutProps = {
 	children: ReactNode
@@ -31,21 +35,25 @@ type AuthPageLayoutProps = {
 const gradientMap = {
 	teal: {
 		light:
-			"bg-[radial-gradient(circle_at_15%_8%,rgba(20,184,166,0.2),transparent_40%),radial-gradient(circle_at_85%_12%,rgba(14,165,233,0.2),transparent_40%),linear-gradient(180deg,#f8fafc_0%,#ecfeff_52%,#f8fafc_100%)]",
-		dark: "dark:bg-[radial-gradient(circle_at_15%_8%,rgba(20,184,166,0.18),transparent_40%),radial-gradient(circle_at_85%_12%,rgba(14,165,233,0.14),transparent_40%),linear-gradient(180deg,#020617_0%,#0b1326_58%,#111827_100%)]",
-		icon: "from-teal-500 to-cyan-500",
+			"bg-[radial-gradient(circle_at_15%_8%,color-mix(in_oklch,var(--primary)_12%,transparent),transparent_42%)]",
+		dark: "dark:bg-[radial-gradient(circle_at_15%_8%,color-mix(in_oklch,var(--primary)_10%,transparent),transparent_42%)]",
 	},
 	emerald: {
 		light:
-			"bg-[radial-gradient(circle_at_10%_10%,rgba(16,185,129,0.2),transparent_42%),radial-gradient(circle_at_85%_10%,rgba(6,182,212,0.18),transparent_42%),linear-gradient(180deg,#f8fafc_0%,#f0fdfa_52%,#f8fafc_100%)]",
-		dark: "dark:bg-[radial-gradient(circle_at_10%_10%,rgba(16,185,129,0.18),transparent_42%),radial-gradient(circle_at_85%_10%,rgba(6,182,212,0.14),transparent_42%),linear-gradient(180deg,#020617_0%,#0a1528_58%,#111827_100%)]",
-		icon: "from-emerald-500 to-cyan-500",
+			"bg-[radial-gradient(circle_at_10%_10%,color-mix(in_oklch,var(--primary)_12%,transparent),transparent_42%)]",
+		dark: "dark:bg-[radial-gradient(circle_at_10%_10%,color-mix(in_oklch,var(--primary)_10%,transparent),transparent_42%)]",
 	},
 }
 
 const badgeAccentMap: Record<string, string> = {
-	teal: "bg-teal-500/12 text-teal-700 dark:text-teal-200",
-	emerald: "bg-emerald-500/12 text-emerald-700 dark:text-emerald-200",
+	teal: "border-teal-500/30 bg-teal-500/5 text-teal-700 dark:text-teal-200",
+	emerald:
+		"border-emerald-500/30 bg-emerald-500/5 text-emerald-700 dark:text-emerald-200",
+}
+
+const infoAccentMap: Record<string, string> = {
+	teal: "from-teal-500/15 to-cyan-500/5",
+	emerald: "from-emerald-500/15 to-cyan-500/5",
 }
 
 export function AuthPageLayout({
@@ -64,87 +72,122 @@ export function AuthPageLayout({
 	const g = gradientMap[gradient]
 
 	return (
-		<div
-			className={`relative min-h-screen overflow-hidden ${g.light} ${g.dark} px-4 py-8 sm:px-6`}
-		>
-			<div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,rgba(148,163,184,0.08)_1px,transparent_1px),linear-gradient(to_bottom,rgba(148,163,184,0.08)_1px,transparent_1px)] bg-size-[58px_58px] mask-[radial-gradient(circle_at_center,black_45%,transparent_95%)]" />
-			<div className="relative mx-auto flex w-full max-w-4xl flex-col gap-6">
-				<header className="flex items-center justify-between rounded-3xl border border-white/40 bg-white/65 px-4 py-3 shadow-[0_18px_70px_-48px_rgba(15,23,42,0.55)] backdrop-blur dark:border-white/10 dark:bg-slate-900/55">
-					<a href="/" className="flex items-center gap-2">
-						<div
-							className={`flex size-8 items-center justify-center rounded-lg bg-linear-to-br ${g.icon} text-white`}
-						>
-							<IconSparkles className="size-4" />
+		<div className="relative min-h-screen overflow-hidden bg-background px-4 py-6 text-foreground sm:px-6 lg:px-10">
+			<div
+				className={cn("pointer-events-none absolute inset-0", g.light, g.dark)}
+			/>
+			<div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,color-mix(in_oklch,var(--border)_60%,transparent)_1px,transparent_1px),linear-gradient(to_bottom,color-mix(in_oklch,var(--border)_60%,transparent)_1px,transparent_1px)] bg-size-[56px_56px] mask-[radial-gradient(circle_at_center,black_42%,transparent_95%)]" />
+
+			<div className="relative mx-auto flex w-full max-w-5xl flex-col gap-6">
+				<header className="flex items-center justify-between gap-4 rounded-2xl border border-border/60 bg-background/95 px-4 py-3 shadow-sm backdrop-blur supports-backdrop-filter:bg-background/80 md:px-5">
+					<Link to="/" className="flex shrink-0 items-center gap-3">
+						<img
+							src="/agentfabric.png"
+							alt="AgentFabric"
+							className="h-6 w-auto"
+						/>
+						<div className="hidden sm:block">
+							<p className="text-sm font-semibold tracking-wide">AgentFabric</p>
+							<p className="text-xs text-muted-foreground">
+								AI agent platform foundation
+							</p>
 						</div>
-						<span className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-							AgentFabric
-						</span>
-					</a>
-					<a
-						href={headerLinkHref}
-						className="text-sm text-slate-700 underline-offset-4 transition hover:underline dark:text-slate-200"
-					>
-						{headerLinkText}
-					</a>
+					</Link>
+					<Button asChild variant="outline" size="sm" className="shrink-0">
+						<Link to={headerLinkHref}>{headerLinkText}</Link>
+					</Button>
 				</header>
 
-				<div className="grid gap-6 lg:grid-cols-[1fr_360px]">
-					<Card className="border-white/25 bg-white/72 py-0 shadow-[0_24px_90px_-55px_rgba(15,23,42,0.8)] backdrop-blur dark:border-white/10 dark:bg-slate-900/60">
-						<CardHeader className="pt-6">
-							<Badge className={`w-fit ${badgeAccentMap[badgeAccent]}`}>
+				<div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr] lg:items-start">
+					<Card className="border-border/60 bg-card/80 py-0 shadow-sm backdrop-blur">
+						<CardHeader className="space-y-3 border-b border-border/50 pt-6 pb-5">
+							<Badge
+								variant="outline"
+								className={cn("w-fit", badgeAccentMap[badgeAccent])}
+							>
 								{badgeText}
 							</Badge>
-							<CardTitle className="text-3xl font-semibold tracking-tight text-slate-900 dark:text-slate-50">
-								{title}
-							</CardTitle>
-							<CardDescription className="text-sm leading-6 text-slate-600 dark:text-slate-300">
-								{description}
-							</CardDescription>
+							<div className="space-y-2">
+								<CardTitle className="text-2xl font-semibold tracking-tight sm:text-3xl">
+									{title}
+								</CardTitle>
+								<CardDescription className="text-sm leading-relaxed">
+									{description}
+								</CardDescription>
+							</div>
 						</CardHeader>
-						<CardContent className="space-y-4 pb-6">
+						<CardContent className="space-y-6 px-6 py-6">
 							{children}
 
-							<div className="space-y-2">
-								<p className="text-xs font-medium uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">
-									OAuth coming soon
-								</p>
+							<div className="space-y-4">
+								<div className="relative">
+									<Separator />
+									<span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-card px-2 text-xs text-muted-foreground">
+										Or continue with
+									</span>
+								</div>
 								<div className="grid gap-2 sm:grid-cols-2">
 									<Button
 										type="button"
 										variant="outline"
 										disabled
-										className="h-9 justify-start"
+										className="h-9 justify-start gap-2"
 									>
 										<IconBrandGoogle className="size-4" />
-										Continue with Google
+										Google
 									</Button>
 									<Button
 										type="button"
 										variant="outline"
 										disabled
-										className="h-9 justify-start"
+										className="h-9 justify-start gap-2"
 									>
 										<IconBrandGithub className="size-4" />
-										Continue with GitHub
+										GitHub
 									</Button>
 								</div>
+								<p className="text-center text-xs text-muted-foreground">
+									OAuth providers coming soon
+								</p>
 							</div>
 						</CardContent>
 					</Card>
 
-					<Card className="border-white/25 bg-slate-950 py-0 text-white shadow-[0_24px_90px_-55px_rgba(15,23,42,0.95)]">
-						<CardHeader className="pt-6">
-							<CardTitle className="text-2xl text-white">{infoTitle}</CardTitle>
-							<CardDescription className="text-slate-300">
-								{infoDescription}
-							</CardDescription>
+					<Card className="relative overflow-hidden border-primary/25 bg-card/80 py-0 shadow-sm lg:sticky lg:top-6">
+						<div
+							className={cn(
+								"pointer-events-none absolute inset-0 bg-linear-to-br",
+								infoAccentMap[badgeAccent]
+							)}
+						/>
+						<CardHeader className="relative space-y-3 pt-6">
+							<div className="inline-flex size-10 items-center justify-center rounded-xl bg-primary text-primary-foreground">
+								<IconSparkles className="size-5" />
+							</div>
+							<div className="space-y-2">
+								<CardTitle className="text-xl sm:text-2xl">
+									{infoTitle}
+								</CardTitle>
+								<CardDescription className="text-sm leading-relaxed">
+									{infoDescription}
+								</CardDescription>
+							</div>
 						</CardHeader>
-						<CardContent className="space-y-3 pb-6 text-sm leading-6 text-slate-200">
-							{infoBullets.map((text, i) => (
-								<p key={i}>
-									{i + 1}. {text}
-								</p>
-							))}
+						<CardContent className="relative pb-6">
+							<ul className="space-y-3">
+								{infoBullets.map((text) => (
+									<li
+										key={text}
+										className="flex items-start gap-2.5 text-sm text-muted-foreground"
+									>
+										<IconCircleCheck
+											className="mt-0.5 size-4 shrink-0 text-primary"
+											aria-hidden="true"
+										/>
+										<span>{text}</span>
+									</li>
+								))}
+							</ul>
 						</CardContent>
 					</Card>
 				</div>
