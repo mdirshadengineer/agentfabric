@@ -1,4 +1,5 @@
 import type { CommandDefinition } from "./command-metadata.js";
+import { doctorCommandDefinition } from "./commands/doctor.js";
 import { startCommandDefinition } from "./commands/start.js";
 import { statusCommandDefinition } from "./commands/status.js";
 import { stopCommandDefinition } from "./commands/stop.js";
@@ -7,6 +8,7 @@ const commandDefinitions = defineCommandCatalog([
 	startCommandDefinition,
 	statusCommandDefinition,
 	stopCommandDefinition,
+	doctorCommandDefinition,
 ]);
 
 const commandsByName = indexCommandsByName(commandDefinitions);

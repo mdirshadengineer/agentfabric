@@ -47,6 +47,7 @@ The command catalog currently registers:
 - `start`
 - `status`
 - `stop`
+- `doctor`
 
 Aliases are supported by the catalog infrastructure, though the current command metadata does not define aliases.
 
@@ -122,6 +123,68 @@ Implemented behavior:
 - Escalates to `SIGKILL` after a timeout.
 - Handles already-exited processes.
 - Cleans the process record from the local store.
+
+### Doctor Command
+
+`agentfabric doctor` runs preflight diagnostics before starting the runtime. It validates configuration readiness and prints a grouped report to stdout.
+
+Implemented behavior:
+
+- Runs checks in four groups: Runtime, Environment, Database, and Artifacts.
+- Prints a human-readable report by default with status symbols (`✓`, `⚠`, `✗`, `○`).
+- Supports `--json` for machine-readable output.
+- Supports `--strict` to exit with code `1` when warnings are present.
+- Supports `--dotenv` in development only (`NODE_ENV !== "production"`) to load `.env` from the current working directory; rejected in production.
+- Sets `process.exitCode = 1` on failures, or on warnings when `--strict` is used.
+
+#### Check groups
+
+**Runtime**
+
+- Node.js version against `engines.node` from `package.json`.
+- Installed CLI package version.
+
+**Environment**
+
+- Required: `DATABASE_URL`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_BASE_URL`.
+- Warns when `BETTER_AUTH_SECRET` is shorter than 32 characters or `BETTER_AUTH_BASE_URL` is not a valid URL.
+- Validates optional server/auth/database env vars when set: `PORT`, `DB_SSL`, `DB_IDLE_TIMEOUT`, `DB_CONNECT_TIMEOUT`, `DB_POOL_SIZE`, session policy variables, rate-limit settings, log level, and frontend toggle.
+- Informational `.env` file presence in the current working directory.
+
+**Database**
+
+- Skipped when `DATABASE_URL` is missing.
+- Probes PostgreSQL connectivity with an isolated `postgres` client (does not import `db/index.ts` or `lib/auth.ts`, which throw at module load when env is incomplete).
+- Verifies `drizzle.__drizzle_migrations` exists and compares applied migration hashes against the bundled journal.
+- Verifies core schema tables exist: `user`, `session`, `account`, `verification`, `workspace`, `workspace_member`, `invitation`, `apikey`.
+- Suggests `pnpm --filter agentfabric db:migrate` when migrations are pending.
+
+**Artifacts**
+
+- In production with frontend enabled: warns when `dist/ui/index.html` is missing.
+- In development: probes Vite at `localhost:5173` and reports whether the dev UI proxy target is reachable.
+- Lists running detached processes read-only (does not self-heal the process store during diagnostics).
+
+#### Doctor module layout
+
+```text
+packages/cli/src/doctor/
+  types.ts
+  run-doctor.ts
+  report.ts
+  paths.ts
+  db-probe.ts
+  migration-journal.ts
+  checks/
+    runtime.ts
+    environment.ts
+    database.ts
+    artifacts.ts
+```
+
+#### Migration journal bundling
+
+Migrations are not shipped as SQL in the published npm package. During CLI build, `sync-migration-journal` copies `migrations/meta/_journal.json` to `dist/doctor/migration-journal.json`. The doctor command resolves the journal from that bundled file first, then falls back to the source `migrations/meta/_journal.json` in the monorepo checkout.
 
 ## Process Management
 
@@ -635,7 +698,8 @@ The CLI package build flow composes the full product artifact:
 
 1. Builds the web app with `pnpm --filter agentfabric-web ui-build`.
 2. Compiles the CLI TypeScript project.
-3. Copies the built web output into `packages/cli/dist/ui`.
+3. Copies `migrations/meta/_journal.json` into `dist/doctor/migration-journal.json` for doctor migration checks.
+4. Copies the built web output into `packages/cli/dist/ui`.
 
 This lets the production CLI server host the compiled SPA from the same package.
 
@@ -651,7 +715,8 @@ The CLI package publishes:
 
 Existing documentation includes:
 
-- Root `README.md`, currently only a title.
+- Root `README.md` — monorepo overview, environment variables, development commands, and `doctor` usage.
+- `docs/IMPLEMENTATION.md` — full platform architecture, including the `doctor` command and migration journal bundling.
 - `docs/DEVICE_ID_INTEGRATION.md`, which explains the client-side device id and session governance integration.
 - Package README/changelog files for CLI and web packages.
 
@@ -666,26 +731,27 @@ The following areas are not fully implemented yet:
 - Workspace shell header profile, sidebar, and workspace switcher are not wired to query data yet.
 - Admin management queries (`roles`, `users`, bootstrap-admin) are only used in test routes, not production UI.
 - OAuth buttons are present but disabled.
-- The root README does not yet describe setup, development, environment variables, or architecture.
+- The root README documents setup, development, environment variables, and the `doctor` preflight command.
 - There are root test scripts, but no test files were found in the scanned source tree.
 
 ## High-Level Data Flow
 
 Typical local runtime flow:
 
-1. User runs `agentfabric start`.
-2. CLI command discovery resolves the `start` command.
-3. The runtime starts the Fastify API server.
-4. In development, Fastify proxies non-API routes to Vite.
-5. The React app loads with a shared TanStack Query cache and TanStack Router context.
-6. Visiting a protected route triggers `beforeLoad` session preload; unauthenticated users are redirected to `/signin`.
-7. The React app calls Better Auth endpoints under `/api/v1/auth` (session queries and auth mutations).
-8. The auth fetch interceptor injects `x-device-id`.
-9. Authenticated workspace routes preload `GET /api/v1/management/me` and the workspace list query.
-10. The backend proxies auth requests to Better Auth.
-11. Session governance enforces or prunes sessions.
-12. Auth, API key, management, workspace, and table data are persisted in Postgres; HTTP logs go to stdout and metrics are exposed at `/metrics`.
+1. User runs `agentfabric doctor` (optionally with `--dotenv` in development) to verify env, database, migrations, and artifacts.
+2. User runs `agentfabric start`.
+3. CLI command discovery resolves the `start` command.
+4. The runtime starts the Fastify API server.
+5. In development, Fastify proxies non-API routes to Vite.
+6. The React app loads with a shared TanStack Query cache and TanStack Router context.
+7. Visiting a protected route triggers `beforeLoad` session preload; unauthenticated users are redirected to `/signin`.
+8. The React app calls Better Auth endpoints under `/api/v1/auth` (session queries and auth mutations).
+9. The auth fetch interceptor injects `x-device-id`.
+10. Authenticated workspace routes preload `GET /api/v1/management/me` and the workspace list query.
+11. The backend proxies auth requests to Better Auth.
+12. Session governance enforces or prunes sessions.
+13. Auth, API key, management, workspace, and table data are persisted in Postgres; HTTP logs go to stdout and metrics are exposed at `/metrics`.
 
 ## Summary
 
-AgentFabric currently implements a strong foundation for a unified CLI, API server, authentication layer, session governance system, API key access, Prometheus metrics, Fastify/Pino logging, database schema, and React web shell with TanStack Query–based data fetching, route-level auth guards, and management API preloading. The codebase is ready for the next layer of product implementation: deeper workspace UI wiring, agent/workflow orchestration, OAuth providers, richer admin screens, and production-ready documentation.
+AgentFabric currently implements a strong foundation for a unified CLI, API server, authentication layer, session governance system, API key access, Prometheus metrics, Fastify/Pino logging, database schema, preflight `doctor` diagnostics, and React web shell with TanStack Query–based data fetching, route-level auth guards, and management API preloading. The codebase is ready for the next layer of product implementation: deeper workspace UI wiring, agent/workflow orchestration, OAuth providers, richer admin screens, and production-ready documentation.

@@ -79,6 +79,7 @@ flowchart TD
     Start[start]
     Status[status]
     Stop[stop]
+    Doctor[doctor]
 
     PM[ProcessManager]
     Store[(processes.json)]
@@ -88,10 +89,13 @@ flowchart TD
     CLI --> Start
     CLI --> Status
     CLI --> Stop
+    CLI --> Doctor
 
     Start --> PM
     Status --> PM
     Stop --> PM
+
+    Doctor --> Runtime
 
     PM --> Store
     PM --> OS
@@ -351,6 +355,81 @@ agentfabric stop --id <name>
 
 ---
 
+## Doctor
+
+Inspect configuration readiness before starting the runtime. Use this command after setting environment variables and applying database migrations, but before `agentfabric start`.
+
+```bash
+agentfabric doctor
+agentfabric doctor --json
+agentfabric doctor --strict
+NODE_ENV=development agentfabric doctor --dotenv
+```
+
+| Flag | Description |
+|------|-------------|
+| `--json` | Output the full report as JSON |
+| `--strict` | Exit with code 1 on warnings as well as failures |
+| `--dotenv` | Load `.env` from the current directory (development only; rejected in production) |
+
+Exit code `1` when any check fails, or when `--strict` is passed and warnings are present.
+
+### Check groups
+
+| Group | What it validates |
+|-------|-------------------|
+| **Runtime** | Node.js version (`>=24`), installed CLI version |
+| **Environment** | Required auth/database env vars; optional server config; `.env` presence (informational) |
+| **Database** | PostgreSQL connectivity, Drizzle migration status, core schema tables |
+| **Artifacts** | Built UI (`dist/ui`), Vite dev server in development, running detached processes (informational) |
+
+Database checks are skipped when `DATABASE_URL` is unset. Migration checks compare applied hashes in `drizzle.__drizzle_migrations` against the bundled migration journal copied during build.
+
+Remediation hints are printed for common failures, for example:
+
+```text
+→ Run: pnpm --filter agentfabric db:migrate
+→ Run pnpm build before starting in production
+→ Start the web dev server with pnpm dev
+```
+
+### Example output
+
+```text
+AgentFabric Doctor
+
+Runtime
+  ✓ Node.js — v24.15.0 (requires >=24)
+  ✓ agentfabric — 0.0.2
+
+Environment
+  ✓ DATABASE_URL — set
+  ✓ BETTER_AUTH_SECRET — set
+  ✓ BETTER_AUTH_BASE_URL — http://localhost:5678
+
+Database
+  ✓ PostgreSQL connection — connected
+  ✗ Migrations — 0/6 applied (pending: 0000_tricky_edwin_jarvis, ...)
+    → Run: pnpm --filter agentfabric db:migrate
+  ✓ Schema tables — 8/8 present
+
+Artifacts
+  ○ Built UI — dist/ui/index.html not found (not required in development)
+  ⚠ Vite dev server — not reachable at localhost:5173
+    → Start the web dev server with pnpm dev
+
+Summary: 7 passed, 1 warning, 1 failed
+```
+
+### Implementation notes
+
+- Doctor code lives under `src/doctor/` and does **not** import `db/index.ts` or `lib/auth.ts`, because those modules throw at import time when required env vars are missing.
+- Database probes use a short-lived isolated `postgres` client in `doctor/db-probe.ts`.
+- Process listing is read-only; doctor does not self-heal `~/.agentfabric/processes.json`.
+- Build copies `migrations/meta/_journal.json` to `dist/doctor/migration-journal.json` via the `sync-migration-journal` script.
+
+---
+
 # 📌 Design Guarantees
 
 ### ✅ No Stale State
@@ -371,6 +450,7 @@ agentfabric stop --id <name>
 start → create
 stop → remove
 status → reconcile
+doctor → inspect (read-only)
 ```
 
 ---
@@ -432,6 +512,15 @@ Future enhancements:
   start.ts
   status.ts
   stop.ts
+  doctor.ts
+
+/doctor
+  run-doctor.ts
+  report.ts
+  paths.ts
+  db-probe.ts
+  migration-journal.ts
+  checks/
 
 /runtime
   agentfabric-runtime.ts

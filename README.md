@@ -36,7 +36,8 @@ agentfabric/
 ## What's Implemented
 
 ### CLI & Runtime
-- Command dispatch system (`start`, `status`, `stop`) with lifecycle hooks
+- Command dispatch system (`start`, `status`, `stop`, `doctor`) with lifecycle hooks
+- `doctor` — preflight diagnostics for env vars, PostgreSQL, migrations, schema tables, and build artifacts
 - Detached process management with process store at `~/.agentfabric/processes.json`
 - Graceful shutdown with `SIGINT`/`SIGTERM` handling
 - Runtime service container with reverse-order startup/shutdown
@@ -138,6 +139,11 @@ pnpm --filter agentfabric db:generate # Generate migrations
 pnpm --filter agentfabric db:migrate  # Run migrations
 pnpm --filter agentfabric db:studio   # Open Drizzle Studio
 
+# Validate local setup before starting the runtime
+agentfabric doctor
+NODE_ENV=development agentfabric doctor --dotenv
+agentfabric doctor --json --strict
+
 # Create a changeset
 pnpm changeset
 ```
@@ -147,15 +153,17 @@ pnpm changeset
 The CLI build (`pnpm build` from `packages/cli`):
 1. Builds the web app (`agentfabric-web ui-build`)
 2. Compiles the CLI TypeScript
-3. Copies the built web SPA into `packages/cli/dist/ui`
+3. Copies the migration journal into `dist/doctor/migration-journal.json` for `doctor` migration checks
+4. Copies the built web SPA into `packages/cli/dist/ui`
 
 This lets the production CLI serve the full SPA from a single package.
 
 ## Documentation
 
-- [`docs/implementation_detail.md`](docs/implementation_detail.md) — Full platform architecture
+- [`docs/IMPLEMENTATION.md`](docs/IMPLEMENTATION.md) — Full platform architecture and implementation detail
 - [`docs/BETTER_AUTH_CONFIGURATION.md`](docs/BETTER_AUTH_CONFIGURATION.md) — Auth configuration audit
 - [`docs/DEVICE_ID_INTEGRATION.md`](docs/DEVICE_ID_INTEGRATION.md) — Device-based session governance
+- [`packages/cli/README.md`](packages/cli/README.md) — CLI commands, process management, and `doctor` usage
 
 ## License
 
