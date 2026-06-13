@@ -1,13 +1,14 @@
 import { type } from "arktype";
-import { config as loadDotenv } from "dotenv";
 import { CommandLifecycle } from "../command-lifecycle.js";
 import {
 	Command,
 	type CommandDefinition,
 	type CommandMetadata,
 } from "../command-metadata.js";
+import { shouldSetExitCode } from "../doctor/exit-with-report.js";
 import { renderHumanReport, renderJsonReport } from "../doctor/report.js";
-import { runDoctor, shouldExitWithError } from "../doctor/run-doctor.js";
+import { runDoctor } from "../doctor/run-doctor.js";
+import { loadDotenvIfAllowed } from "./_shared/load-dotenv-if-allowed.js";
 
 // -----------------------------
 // Flags
@@ -48,16 +49,8 @@ const doctorCommandMetadata = {
 @Command(doctorCommandMetadata)
 class Doctor extends CommandLifecycle<DoctorCommandFlags> {
 	protected override async run(): Promise<void> {
-		if (this.flags.dotenv) {
-			if (process.env.NODE_ENV === "production") {
-				console.error(
-					"The --dotenv flag is not allowed in production. Configure environment variables via the OS or deployment platform.",
-				);
-				process.exitCode = 1;
-				return;
-			}
-
-			loadDotenv({ quiet: true });
+		if (!loadDotenvIfAllowed(this.flags.dotenv)) {
+			return;
 		}
 
 		const report = await runDoctor();
@@ -68,7 +61,7 @@ class Doctor extends CommandLifecycle<DoctorCommandFlags> {
 			console.log(renderHumanReport(report));
 		}
 
-		if (shouldExitWithError(report, { strict: this.flags.strict ?? false })) {
+		if (shouldSetExitCode(report, { strict: this.flags.strict ?? false })) {
 			process.exitCode = 1;
 		}
 	}

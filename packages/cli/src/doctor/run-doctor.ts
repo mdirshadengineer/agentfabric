@@ -4,7 +4,7 @@ import {
 	runDatabaseConnectivityCheck,
 } from "./checks/database.js";
 import { runEnvironmentChecks } from "./checks/environment.js";
-import { runRuntimeChecks } from "./checks/runtime.js";
+import { runRuntimeChecks } from "./checks/node-version.js";
 import {
 	type DoctorReport,
 	hasFailures,

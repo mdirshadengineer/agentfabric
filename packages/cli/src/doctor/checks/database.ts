@@ -1,10 +1,9 @@
+import { getPendingMigrations } from "../../init/apply-migrations.js";
 import {
-	fetchAppliedMigrationHashes,
 	fetchExistingTables,
 	getExpectedTables,
 	probeDatabaseConnection,
 } from "../db-probe.js";
-import { compareMigrations } from "../migration-journal.js";
 import { createCheck, createGroup, type DoctorGroup } from "../types.js";
 
 const MIGRATE_HINT = "Run: pnpm --filter agentfabric db:migrate";
@@ -64,14 +63,12 @@ export async function runDatabaseChecks(): Promise<DoctorGroup> {
 		return connectivityGroup;
 	}
 
-	const connectionString = process.env.DATABASE_URL as string;
-
-	const migrations = await fetchAppliedMigrationHashes(connectionString);
-	if (!migrations.ok) {
+	const migrationStatus = await getPendingMigrations();
+	if (!migrationStatus.ok) {
 		checks.push(
-			createCheck("migrations", "Migrations", "fail", migrations.error),
+			createCheck("migrations", "Migrations", "fail", migrationStatus.error),
 		);
-	} else if (!migrations.tableExists) {
+	} else if (!migrationStatus.tableExists) {
 		checks.push(
 			createCheck(
 				"migrations-table",
@@ -81,52 +78,49 @@ export async function runDatabaseChecks(): Promise<DoctorGroup> {
 				MIGRATE_HINT,
 			),
 		);
+	} else if (!migrationStatus.journalAvailable) {
+		checks.push(
+			createCheck(
+				"migrations-journal",
+				"Migrations",
+				"warn",
+				`cannot verify completeness (${migrationStatus.appliedHashCount} applied; journal unavailable)`,
+				MIGRATE_HINT,
+			),
+		);
+	} else if (migrationStatus.pending > 0) {
+		const pendingList = migrationStatus.tags.join(", ");
+		checks.push(
+			createCheck(
+				"migrations-pending",
+				"Migrations",
+				"fail",
+				`${migrationStatus.appliedCount}/${migrationStatus.expectedCount} applied (pending: ${pendingList})`,
+				MIGRATE_HINT,
+			),
+		);
+	} else if (migrationStatus.appliedHashCount < migrationStatus.expectedCount) {
+		checks.push(
+			createCheck(
+				"migrations-count",
+				"Migrations",
+				"fail",
+				`${migrationStatus.appliedHashCount}/${migrationStatus.expectedCount} applied`,
+				MIGRATE_HINT,
+			),
+		);
 	} else {
-		const status = compareMigrations(migrations.hashes);
-
-		if (!status.journalAvailable) {
-			checks.push(
-				createCheck(
-					"migrations-journal",
-					"Migrations",
-					"warn",
-					`cannot verify completeness (${migrations.hashes.length} applied; journal unavailable)`,
-					MIGRATE_HINT,
-				),
-			);
-		} else if (status.pendingTags.length > 0) {
-			const pendingList = status.pendingTags.join(", ");
-			checks.push(
-				createCheck(
-					"migrations-pending",
-					"Migrations",
-					"fail",
-					`${status.appliedCount}/${status.expectedCount} applied (pending: ${pendingList})`,
-					MIGRATE_HINT,
-				),
-			);
-		} else if (migrations.hashes.length < status.expectedCount) {
-			checks.push(
-				createCheck(
-					"migrations-count",
-					"Migrations",
-					"fail",
-					`${migrations.hashes.length}/${status.expectedCount} applied`,
-					MIGRATE_HINT,
-				),
-			);
-		} else {
-			checks.push(
-				createCheck(
-					"migrations",
-					"Migrations",
-					"pass",
-					`${status.expectedCount}/${status.expectedCount} applied`,
-				),
-			);
-		}
+		checks.push(
+			createCheck(
+				"migrations",
+				"Migrations",
+				"pass",
+				`${migrationStatus.expectedCount}/${migrationStatus.expectedCount} applied`,
+			),
+		);
 	}
 
+	const connectionString = process.env.DATABASE_URL as string;
 	const tables = await fetchExistingTables(connectionString);
 	if (!tables.ok) {
 		checks.push(

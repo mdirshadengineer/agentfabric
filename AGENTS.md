@@ -7,7 +7,7 @@ AgentFabric is a pnpm workspace monorepo with Turborepo for building, deploying,
 - **`packages/cli`** — publishable CLI (`agentfabric` / `afabric`) with Fastify API server, Better Auth, PostgreSQL/Drizzle, process management, logging, and metrics.
 - **`web`** — Vite + React 19 SPA (TanStack Router, TanStack Query, shadcn/ui, Tailwind CSS 4) with landing page, auth screens, and workspace shell.
 
-See README.md for the full overview, tech stack, environment variables, and development commands.
+See README.md for the full overview, tech stack, environment variables, and development commands. See [packages/cli/ARCHITECTURE.md](packages/cli/ARCHITECTURE.md) for CLI internal layout and module conventions.
 
 ## What's Implemented (Current State)
 

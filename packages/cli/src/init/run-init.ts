@@ -1,32 +1,8 @@
-import {
-	runDoctorPreflight,
-	shouldExitWithError,
-} from "../doctor/run-doctor.js";
-import type { DoctorReport } from "../doctor/types.js";
-import {
-	type ApplyMigrationsResult,
-	applyMigrations,
-} from "./apply-migrations.js";
+import type { SetupResult } from "./run-setup.js";
+import { runSetup } from "./run-setup.js";
 
-export interface InitResult {
-	preflight: DoctorReport;
-	preflightFailed: boolean;
-	migration?: ApplyMigrationsResult;
-}
+export type InitResult = SetupResult;
 
 export async function runInit(): Promise<InitResult> {
-	const preflight = await runDoctorPreflight();
-	const preflightFailed = shouldExitWithError(preflight, { strict: false });
-
-	if (preflightFailed) {
-		return { preflight, preflightFailed };
-	}
-
-	const migration = await applyMigrations();
-
-	return {
-		preflight,
-		preflightFailed: false,
-		migration,
-	};
+	return runSetup({ mode: "auto" });
 }

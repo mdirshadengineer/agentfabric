@@ -9,6 +9,20 @@ import {
 	uniqueIndex,
 } from "drizzle-orm/pg-core";
 
+/** PostgreSQL table names managed by Drizzle migrations. */
+export const EXPECTED_TABLES = [
+	"user",
+	"session",
+	"account",
+	"verification",
+	"workspace",
+	"workspace_member",
+	"invitation",
+	"apikey",
+] as const;
+
+export type ExpectedTable = (typeof EXPECTED_TABLES)[number];
+
 export const user = pgTable("user", {
 	id: text("id").primaryKey(),
 	name: text("name").notNull(),

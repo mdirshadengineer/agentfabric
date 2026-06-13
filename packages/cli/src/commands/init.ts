@@ -1,13 +1,14 @@
 import { type } from "arktype";
-import { config as loadDotenv } from "dotenv";
 import { CommandLifecycle } from "../command-lifecycle.js";
 import {
 	Command,
 	type CommandDefinition,
 	type CommandMetadata,
 } from "../command-metadata.js";
+import { formatMigrationCount } from "../doctor/format-migration-count.js";
 import { renderHumanReport } from "../doctor/report.js";
 import { runInit } from "../init/run-init.js";
+import { loadDotenvIfAllowed } from "./_shared/load-dotenv-if-allowed.js";
 
 // -----------------------------
 // Flags
@@ -47,16 +48,8 @@ const initCommandMetadata = {
 @Command(initCommandMetadata)
 class Init extends CommandLifecycle<InitCommandFlags> {
 	protected override async run(): Promise<void> {
-		if (this.flags.dotenv) {
-			if (process.env.NODE_ENV === "production") {
-				console.error(
-					"The --dotenv flag is not allowed in production. Configure environment variables via the OS or deployment platform.",
-				);
-				process.exitCode = 1;
-				return;
-			}
-
-			loadDotenv({ quiet: true });
+		if (!loadDotenvIfAllowed(this.flags.dotenv)) {
+			return;
 		}
 
 		const result = await runInit();
@@ -94,8 +87,7 @@ class Init extends CommandLifecycle<InitCommandFlags> {
 
 		if (!this.flags.json) {
 			const applied = result.migration.applied;
-			const appliedLabel =
-				applied === 1 ? "1 migration" : `${applied} migration(s)`;
+			const appliedLabel = formatMigrationCount(applied);
 
 			console.log(
 				applied > 0

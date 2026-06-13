@@ -269,7 +269,8 @@ require("node:net").setDefaultAutoSelectFamily?.(false);
 
 	// Boot the DI container and resolve + discover the CLI command.
 	const { container: Container } = await import("tsyringe");
-	await Container.resolve(CommandDiscovery).discover();
+	const exitCode = await Container.resolve(CommandDiscovery).discover();
+	process.exit(exitCode);
 })().catch((error) => {
 	// Use process.stderr directly — avoids any custom logger that might itself fail.
 	process.stderr.write("\n[agentfabric] Fatal startup error:\n");

@@ -38,8 +38,4 @@ function Command(metadata: CommandMetadata) {
 	};
 }
 
-function getCommandMetadata(target: CommandClass): CommandMetadata | undefined {
-	return target[commandMetadataKey];
-}
-
-export { Command, type CommandDefinition, getCommandMetadata };
+export { Command, type CommandDefinition };

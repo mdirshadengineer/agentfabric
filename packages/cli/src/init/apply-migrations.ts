@@ -14,9 +14,20 @@ export type ApplyMigrationsResult =
 	| { ok: true; applied: number }
 	| { ok: false; error: string };
 
-export async function getPendingMigrations(): Promise<
-	{ ok: true; pending: number; tags: string[] } | { ok: false; error: string }
-> {
+export type PendingMigrationsResult =
+	| { ok: false; error: string }
+	| {
+			ok: true;
+			tableExists: boolean;
+			pending: number;
+			tags: string[];
+			journalAvailable: boolean;
+			expectedCount: number;
+			appliedCount: number;
+			appliedHashCount: number;
+	  };
+
+export async function getPendingMigrations(): Promise<PendingMigrationsResult> {
 	const connectionString = process.env.DATABASE_URL?.trim();
 	if (!connectionString) {
 		return { ok: false, error: "DATABASE_URL is not set" };
@@ -28,11 +39,17 @@ export async function getPendingMigrations(): Promise<
 	}
 
 	const tags = getPendingMigrationTags(applied.hashes, applied.tableExists);
+	const status = compareMigrations(applied.hashes);
 
 	return {
 		ok: true,
+		tableExists: applied.tableExists,
 		pending: tags.length,
 		tags,
+		journalAvailable: status.journalAvailable,
+		expectedCount: status.expectedCount,
+		appliedCount: status.appliedCount,
+		appliedHashCount: applied.hashes.length,
 	};
 }
 

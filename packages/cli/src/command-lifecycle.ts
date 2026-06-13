@@ -7,6 +7,7 @@ interface CommandLifecycleHooks {
 	onFinally?(): Promise<void> | void;
 }
 
+/** Hooks reserved for future use; no command implements them yet. */
 abstract class CommandLifecycle<
 	Flags extends Record<string, unknown> = Record<string, unknown>,
 > implements CommandLifecycleHooks

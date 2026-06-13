@@ -1,14 +1,7 @@
-import { renderHumanReport } from "../doctor/report.js";
-import {
-	runDoctorPreflight,
-	shouldExitWithError,
-} from "../doctor/run-doctor.js";
+import { writeReportToStderr } from "../doctor/exit-with-report.js";
+import { formatMigrationCount } from "../doctor/format-migration-count.js";
 import { AGENTFABRIC_DEFAULT_COMMAND } from "../global.config.js";
-import {
-	applyMigrations,
-	getPendingMigrations,
-} from "../init/apply-migrations.js";
-import { confirmMigrationApply } from "./confirm-migration-apply.js";
+import { runSetup } from "../init/run-setup.js";
 
 export function shouldRunBootstrapPreflight(
 	commandName: string | undefined,
@@ -18,56 +11,36 @@ export function shouldRunBootstrapPreflight(
 }
 
 export async function runBootstrapPreflight(): Promise<number> {
-	const preflight = await runDoctorPreflight();
-
-	if (shouldExitWithError(preflight, { strict: false })) {
-		process.stderr.write(
-			`${renderHumanReport(preflight, "AgentFabric Preflight")}\n`,
-		);
-		return 1;
-	}
-
-	const pendingResult = await getPendingMigrations();
-	if (!pendingResult.ok) {
-		process.stderr.write(`Migration check failed: ${pendingResult.error}\n`);
-		return 1;
-	}
-
-	if (pendingResult.pending === 0) {
-		return 0;
-	}
-
-	const confirmed = await confirmMigrationApply({
-		pendingCount: pendingResult.pending,
-		pendingTags: pendingResult.tags,
+	const result = await runSetup({
+		mode: "confirm",
+		onBeforeApply: (pending) => {
+			process.stdout.write(`\nApplying ${formatMigrationCount(pending)}...\n`);
+		},
 	});
 
-	if (!confirmed) {
+	if (result.preflightFailed) {
+		writeReportToStderr(result.preflight, "AgentFabric Preflight");
+		return 1;
+	}
+
+	if (result.declined) {
 		process.stderr.write(
 			"\nMigration apply declined. Start aborted — run `agentfabric init` when ready.\n",
 		);
 		return 1;
 	}
 
-	const pendingLabel =
-		pendingResult.pending === 1
-			? "1 pending migration"
-			: `${pendingResult.pending} pending migrations`;
-
-	process.stdout.write(`\nApplying ${pendingLabel}...\n`);
-
-	const migration = await applyMigrations();
-	if (!migration.ok) {
-		process.stderr.write(`Migration failed: ${migration.error}\n`);
+	if (!result.migration?.ok) {
+		process.stderr.write(
+			`Migration failed: ${result.migration?.error ?? "unknown error"}\n`,
+		);
 		return 1;
 	}
 
-	if (migration.applied > 0) {
-		const appliedLabel =
-			migration.applied === 1
-				? "1 migration"
-				: `${migration.applied} migrations`;
-		process.stdout.write(`Applied ${appliedLabel}. Starting server...\n\n`);
+	if (result.migration.applied > 0) {
+		process.stdout.write(
+			`Applied ${formatMigrationCount(result.migration.applied)}. Starting server...\n\n`,
+		);
 	}
 
 	return 0;

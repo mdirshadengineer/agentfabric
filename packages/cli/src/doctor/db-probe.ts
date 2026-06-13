@@ -1,73 +1,11 @@
-import postgres from "postgres";
-
-const DEFAULT_DB_IDLE_TIMEOUT_SECONDS = 20;
-const DEFAULT_DB_CONNECT_TIMEOUT_SECONDS = 30;
-const DEFAULT_DB_POOL_SIZE = 1;
-
-const EXPECTED_TABLES = [
-	"user",
-	"session",
-	"account",
-	"verification",
-	"workspace",
-	"workspace_member",
-	"invitation",
-	"apikey",
-] as const;
-
-function parsePositiveIntegerEnv(
-	value: string | undefined,
-	defaultValue: number,
-): number {
-	if (value === undefined || value.trim().length === 0) {
-		return defaultValue;
-	}
-
-	const parsed = Number(value);
-	if (!Number.isInteger(parsed) || parsed < 1) {
-		return defaultValue;
-	}
-
-	return parsed;
-}
-
-function shouldEnableDbSsl(): boolean {
-	const raw = process.env.DB_SSL;
-	const isProduction = process.env.NODE_ENV === "production";
-
-	if (raw === undefined) {
-		if (process.env.IS_MANUAL_TESTING === "true") {
-			return false;
-		}
-		return isProduction;
-	}
-
-	const normalized = raw.trim().toLowerCase();
-	if (normalized === "1" || normalized === "true") {
-		return true;
-	}
-
-	if (normalized === "0" || normalized === "false") {
-		return false;
-	}
-
-	return isProduction;
-}
+import { createPostgresClient } from "../db/create-postgres-client.js";
+import { EXPECTED_TABLES } from "../schema.js";
 
 export function createProbeClient(connectionString: string) {
-	return postgres(connectionString, {
-		prepare: false,
-		max: DEFAULT_DB_POOL_SIZE,
-		idle_timeout: parsePositiveIntegerEnv(
-			process.env.DB_IDLE_TIMEOUT,
-			DEFAULT_DB_IDLE_TIMEOUT_SECONDS,
-		),
-		connect_timeout: parsePositiveIntegerEnv(
-			process.env.DB_CONNECT_TIMEOUT,
-			DEFAULT_DB_CONNECT_TIMEOUT_SECONDS,
-		),
-		ssl: shouldEnableDbSsl() ? "require" : false,
-		onnotice: () => {},
+	return createPostgresClient({
+		connectionString,
+		poolSize: 1,
+		invalidEnvPolicy: "default",
 	});
 }
 
